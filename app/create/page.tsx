@@ -9,11 +9,20 @@ import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { HiPlus } from 'react-icons/hi';
 import CreatePostNavbar from '@/components/CreatePostNavbar';
+import Image from 'next/image';
 
-const CreatePost = () => {
+interface PostData {
+    title: string;
+    content: string;
+    author: string;
+    createdAt: Timestamp;
+    imageUrl: string | null;
+}
+
+const CreatePost: React.FC = () => {
     const { user, isLoaded, isSignedIn } = useUser();
-    const [title, setTitle] = useState('');
-    const [content, setContent] = useState('');
+    const [title, setTitle] = useState<string>('');
+    const [content, setContent] = useState<string>('');
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [elements, setElements] = useState<File[]>([]); // Only images now
     const router = useRouter();
@@ -25,7 +34,7 @@ const CreatePost = () => {
         }
     }, [isLoaded, isSignedIn, router]);
 
-    const handleImageUpload = async (file: File) => {
+    const handleImageUpload = async (file: File): Promise<string | null> => {
         if (!file) return null;
         const storageRef = ref(storage, `images/${file.name}`);
         await uploadBytes(storageRef, file);
@@ -33,18 +42,16 @@ const CreatePost = () => {
         return downloadURL;
     };
 
-    const handleSubmit = async () => {
+    const handleSubmit = async (): Promise<void> => {
         let imageUrl: string | null = null;
         if (imageFile) {
             imageUrl = await handleImageUpload(imageFile);
         }
 
-        // Prepare post data including the author's profile image URL
-        const postData = {
+        const postData: PostData = {
             title,
             content,
             author: user?.fullName || user?.firstName || user?.username || 'Anonymous', // Prioritize available name fields
-            authorProfileImage: user?.imageUrl, // Get user's profile image URL from Clerk
             createdAt: Timestamp.fromDate(new Date()),
             imageUrl: imageUrl || null,
         };
@@ -53,7 +60,7 @@ const CreatePost = () => {
         router.push('/'); // Redirect to homepage after submission
     };
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
         const files = e.target.files;
         if (files && files.length > 0) {
             setImageFile(files[0]);
@@ -116,11 +123,13 @@ const CreatePost = () => {
 
                 <div className="mt-4">
                     {elements.map((element, index) => (
-                        <img
+                        <Image
                             key={index}
                             src={URL.createObjectURL(element)}
                             alt="Selected Preview"
                             className="max-w-full h-auto border rounded-md my-2"
+                            width={100}
+                            height={100} // Add height to avoid warning
                         />
                     ))}
                 </div>

@@ -3,6 +3,7 @@
 import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import MobileNav from './Mobilenav';
 
 const PageNav = ({ postId }: { postId?: string }) => {
     const [isScrolled, setIsScrolled] = useState(false);
@@ -41,10 +42,12 @@ const PageNav = ({ postId }: { postId?: string }) => {
                 </SignedOut>
 
                 <Link href={`/post/edit/${postId}`}>
-                    <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out max-sm:hidden">
-                        Submit Post
-                    </button>
+                <button className="bg-orange-950 hover:bg-orange-800 text-white font-bold py-2 px-6 rounded-full shadow-md transition duration-300 ease-in-out max-sm:hidden">
+  Edit Post
+</button>
+
                 </Link>
+                <MobileNav />
             </div>
         </nav>
     );

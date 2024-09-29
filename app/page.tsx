@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 // Import necessary hooks and functions
 import { useEffect, useState } from 'react'; // React hooks for managing state and side effects
@@ -7,6 +7,7 @@ import { db } from '@/lib/firebase'; // Firestore instance initialized in our fi
 import Link from 'next/link'; // Next.js Link component for client-side navigation
 import { useUser } from '@clerk/nextjs'; // Import Clerk's user hook
 import Header from '@/components/Header';
+import Image from 'next/image'; // Import Next.js Image component
 
 // Define the shape of a Post object with TypeScript interface
 interface Post {
@@ -14,9 +15,9 @@ interface Post {
   title: string; // The title of the post
   content: string; // The main content/body of the post
   author: string; // The author of the post
+  authorProfileImage: string; // URL of the author's profile image
   createdAt: Timestamp; // The timestamp when the post was created
   imageUrl: string; // URL of the image associated with the post
-  authorProfileImage?: string; // Optional profile image of the author
 }
 
 const Home = () => {
@@ -43,6 +44,10 @@ const Home = () => {
 
     fetchPosts(); // Call the fetchPosts function
   }, []); // Empty dependency array means this runs once on mount
+
+  // interface PostProps {
+  //   filteredPosts: Post[];
+  // }
 
   // Function to handle search
   const handleSearch = () => {
@@ -106,19 +111,18 @@ const Home = () => {
           {filteredPosts.length > 0 && filteredPosts[0] && (
             <div className="col-span-1 md:col-span-2">
               <Link key={filteredPosts[0].id} href={`/post/${filteredPosts[0].id}`} className="border p-4 rounded hover:bg-gray-100 flex flex-col">
-                <img src={filteredPosts[0].imageUrl} alt={filteredPosts[0].title} className="w-full h-48 object-cover rounded mb-2" />
+                <Image
+                  src={filteredPosts[0].imageUrl}
+                  alt={filteredPosts[0].title}
+                  width={600}
+                  height={192}
+                  className="w-full h-48 object-cover rounded mb-2"
+                  layout="responsive"
+                />
                 <h2 className="text-xl font-bold">{filteredPosts[0].title}</h2>
                 <p>{filteredPosts[0].content.slice(0, 100)}...</p>
-                <p className="mt-2 text-sm text-gray-500 flex items-center">
-                  By {filteredPosts[0].author} on {filteredPosts[0].createdAt.toDate().toLocaleDateString()}
-                  {/* Display user profile image */}
-                  {filteredPosts[0].authorProfileImage && (
-                    <img
-                      src={filteredPosts[0].authorProfileImage}
-                      alt={`${filteredPosts[0].author}'s profile`}
-                      className="inline-block w-4 h-4 rounded-full ml-2" // Adjusted width and height
-                    />
-                  )}
+                <p className="mt-2 text-sm text-gray-500">
+                  By {filteredPosts[0].author} on {filteredPosts[0].createdAt.toDate().toLocaleDateString()} 
                 </p>
               </Link>
             </div>
@@ -127,17 +131,25 @@ const Home = () => {
           {filteredPosts.slice(1).map(post => (
             <div key={post.id} className="border p-4 rounded hover:bg-gray-100">
               <Link href={`/post/${post.id}`}>
-                <img src={post.imageUrl} alt={post.title} className="w-full h-48 object-cover rounded mb-2" />
+                <Image
+                  src={post.imageUrl}
+                  alt={post.title}
+                  width={600}
+                  height={192}
+                  className="w-full h-48 object-cover rounded mb-2"
+                  layout="responsive"
+                />
                 <h2 className="text-xl font-bold">{post.title}</h2>
                 <p>{post.content.slice(0, 100)}...</p>
-                <p className="mt-2 text-sm text-gray-500 flex items-center">
+                <p className="mt-2 text-sm text-gray-500">
                   By {post.author} on {post.createdAt.toDate().toLocaleDateString()}
-                  {/* Display user profile image */}
                   {post.authorProfileImage && (
-                    <img
+                    <Image
                       src={post.authorProfileImage}
                       alt={`${post.author}'s profile`}
-                      className="inline-block w-4 h-4 rounded-full ml-2" // Adjusted width and height
+                      width={24}
+                      height={24}
+                      className="inline-block w-6 h-6 rounded-full ml-2"
                     />
                   )}
                 </p>

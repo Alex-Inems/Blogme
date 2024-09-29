@@ -1,4 +1,3 @@
-// pages/stories/index.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -7,12 +6,16 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Link from 'next/link';
 import { Timestamp } from 'firebase/firestore';
+import Image from 'next/image'; // Import the Image component from Next.js
+import PageNav from '@/components/PageNav';
+
 interface Post {
   id: string;
   title: string;
   content: string;
-  createdAt:Timestamp;
+  createdAt: Timestamp;
   author: string; // Ensure to include the author field
+  imageUrl?: string; // Optional field for the post image
 }
 
 const StoriesPage: React.FC = () => {
@@ -52,20 +55,32 @@ const StoriesPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
-      <h1 className="text-2xl font-bold mb-4">Your Stories</h1>
+      <PageNav/>
+      <h1 className="text-2xl font-bold mb-4 mt-24">Your Stories</h1>
 
       {posts.length === 0 ? (
-        <p className="text-gray-500">You haven't written any stories yet.</p>
+        <p className="text-gray-500">You haven&apos;t written any stories yet.</p>
       ) : (
         <div className="space-y-4">
           {posts.map((post) => (
             <div key={post.id} className="bg-white p-4 rounded-lg shadow-md">
               <h2 className="text-xl font-semibold">{post.title}</h2>
+
+              {post.imageUrl && (
+                <Image
+                  src={post.imageUrl}
+                  alt={post.title}
+                  width={400} // Adjust width as needed
+                  height={100} // Adjust height as needed
+                  className="rounded mb-2 object-cover" // Use object-cover to maintain aspect ratio
+                />
+              )}
+
               <p className="text-gray-700 mt-2">{post.content.slice(0, 100)}...</p>
               <p className="text-sm text-gray-500 mt-2">
-              Created on {post.createdAt.toDate().toLocaleDateString()}
+                Created on {post.createdAt.toDate().toLocaleDateString()}
               </p>
-              <Link href={`/posts/${post.id}`} className="text-blue-500 mt-2 inline-block">
+              <Link href={`/post/${post.id}`} className="text-blue-500 mt-2 inline-block">
                 Read more
               </Link>
             </div>

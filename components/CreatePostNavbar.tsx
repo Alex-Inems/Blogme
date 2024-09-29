@@ -3,6 +3,7 @@
 import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import MobileNav from './Mobilenav';
 
 interface CreatePostNavbarProps {
     onSubmit: () => void; // Define a prop for the submit function
@@ -49,6 +50,7 @@ const CreatePostNavbar = ({ onSubmit }: CreatePostNavbarProps) => {
                 >
                     Submit Post
                 </button>
+                <MobileNav/>
             </div>
         </nav>
     );

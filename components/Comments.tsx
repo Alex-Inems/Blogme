@@ -7,16 +7,25 @@ import { db } from '@/lib/firebase'; // Firestore instance
 import { HiOutlineChatAlt2 } from 'react-icons/hi'; // Import comment icon
 import { Transition } from '@headlessui/react'; // Import Transition from Headless UI
 
+// Define a Comment interface
+interface Comment {
+  id: string; // Document ID
+  content: string; // Comment content
+  author: string; // Comment author
+  createdAt: Date; // Date of creation
+  postId: string; // Associated post ID
+}
+
 interface CommentsSectionProps {
   postId: string; // Define the type for postId
 }
 
 const CommentsSection: React.FC<CommentsSectionProps> = ({ postId }) => {
   const { user } = useUser(); // Get user information from Clerk
-  const [comments, setComments] = useState<any[]>([]); // State for comments
-  const [newComment, setNewComment] = useState(''); // State for the new comment
-  const [showSheet, setShowSheet] = useState(false); // State to control the visibility of the sheet
-  const [isMobile, setIsMobile] = useState(false); // State to check if on mobile
+  const [comments, setComments] = useState<Comment[]>([]); // State for comments
+  const [newComment, setNewComment] = useState<string>(''); // State for the new comment
+  const [showSheet, setShowSheet] = useState<boolean>(false); // State to control the visibility of the sheet
+  const [isMobile, setIsMobile] = useState<boolean>(false); // State to check if on mobile
 
   // Check screen size to determine if it's mobile
   useEffect(() => {
@@ -32,10 +41,15 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ postId }) => {
 
   // Fetch comments from Firestore on component mount
   useEffect(() => {
+    if (!postId) return; // Early return if postId is not provided
+
     const unsubscribe = onSnapshot(
       query(collection(db, 'comments'), where('postId', '==', postId)), // Filter comments by postId
       (snapshot) => {
-        const fetchedComments = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+        const fetchedComments = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...(doc.data() as Omit<Comment, 'id'>), // Cast to Comment excluding id
+        }));
         setComments(fetchedComments); // Set comments state
       }
     );
@@ -44,7 +58,7 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ postId }) => {
   }, [postId]); // Re-fetch comments when postId changes
 
   // Function to handle comment submission
-  const handleCommentSubmit = async (e: React.FormEvent) => {
+  const handleCommentSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); // Prevent default form submission
 
     if (!newComment.trim()) return; // Ignore empty comments

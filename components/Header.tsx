@@ -1,26 +1,5 @@
-// // components/Header.tsx
-// import Link from 'next/link';
-// import { NAV_LINKS, SITE_NAME } from '../Commons/constants';
-
-// const Header = () => {
-//   return (
-//     <header className="bg-gray-800 text-white p-4">
-//       <nav className="container mx-auto flex justify-between">
-//         <div className="text-2xl font-bold">{SITE_NAME}</div>
-//         <ul className="flex space-x-4">
-//           {NAV_LINKS.map((link, index) => (
-//             <li key={index}>
-//               <Link href={link.path}>{link.label}</Link>
-//             </li>
-//           ))}
-//         </ul>
-//       </nav>
-//     </header>
-//   );
-// };
-
-// export default Header;
 'use client'
+
 import {useState, useEffect} from 'react';
 import Image from 'next/image';
 
@@ -28,7 +7,7 @@ import Link from 'next/link';
 import { SignedIn, SignInButton, SignedOut, UserButton } from '@clerk/nextjs';
 import { usePathname } from 'next/navigation';
 
-import { navibarLinks, sidebarLinks } from '@/Commons/constants';
+import { navibarLinks} from '@/Commons/constants';
 import { cn } from '@/lib/utils';
 import MobileNav from './Mobilenav';
 
