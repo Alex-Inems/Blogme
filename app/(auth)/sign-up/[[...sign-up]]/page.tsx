@@ -1,3 +1,4 @@
+'use client'
 import { SignUp, useUser } from '@clerk/nextjs';
 import { db } from '@/lib/firebase';
 import { doc, setDoc } from 'firebase/firestore';
