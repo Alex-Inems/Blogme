@@ -18,7 +18,7 @@ const MobileNav = () => {
           <Image
             src="/images/menu-black.jpg"
             width={36}
-            height={36}
+            height={38}
             alt="hamburger icon"
             className="cursor-pointer sm:hidden"
           />
@@ -31,7 +31,7 @@ const MobileNav = () => {
               height={32}
               alt="yoom logo"
             /> */}
-            <p className="text-[26px] font-extrabold text-orange-900">BlogMe</p>
+            <p className="text-[26px] font-extrabold text-orange-900">MeBlog</p>
           </Link>
           <div className="flex h-[calc(100vh-72px)] flex-col justify-between overflow-y-auto">
             <SheetClose asChild>

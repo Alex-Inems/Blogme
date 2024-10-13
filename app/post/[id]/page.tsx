@@ -7,8 +7,9 @@ import { getDoc, doc, collection, query, orderBy, limit, onSnapshot } from 'fire
 import { db } from '@/lib/firebase'; // Firestore instance
 import CommentsSection from '@/components/Comments'; // Import CommentsSection
 import Image from 'next/image'; // Import Image component from Next.js
+import Link from 'next/link'; // Import Next.js Link component
+import { FiEdit } from 'react-icons/fi'; // Import Edit icon
 
-// Define the types for Post
 interface Post {
   id: string;
   title: string;
@@ -19,7 +20,6 @@ interface Post {
   createdAt: { toDate: () => Date }; // Firestore timestamp
 }
 
-// Define the props for the PostPage component
 interface PostPageProps {
   params: { id: string }; // Expecting an id parameter
 }
@@ -32,19 +32,16 @@ const PostPage = ({ params }: PostPageProps) => {
   const [recentPosts, setRecentPosts] = useState<Post[]>([]); // State for recent posts
   const [showModal, setShowModal] = useState(false); // State for modal visibility
 
-  // Check if the current user is the author of the post
   const isAuthor = post?.author === user?.username;
 
   useEffect(() => {
-    // Function to fetch post data from Firestore
     const fetchPost = async () => {
       if (id) {
         const postDoc = await getDoc(doc(db, 'posts', id)); // Fetch post document
         if (postDoc.exists()) {
-          // If post exists, set the post data in state
-          setPost({ id: postDoc.id, ...postDoc.data() } as Post);
+          setPost({ id: postDoc.id, ...postDoc.data() } as Post); // Set post data
         } else {
-          console.error('Post not found'); // Handle case where document does not exist
+          console.error('Post not found');
         }
       }
       setLoading(false); // Set loading to false after fetching
@@ -61,60 +58,57 @@ const PostPage = ({ params }: PostPageProps) => {
         const fetchedPosts = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
-        })) as Post[]; // Use Post type directly here
-        setRecentPosts(fetchedPosts); // Set recent posts state
+        })) as Post[];
+        setRecentPosts(fetchedPosts); // Set recent posts
       });
 
       return () => unsubscribe(); // Clean up listener on unmount
     };
 
-    fetchPost(); // Call fetchPost function
-    fetchRecentPosts(); // Call fetchRecentPosts function
-  }, [id]); // Run effect when ID changes
+    fetchPost();
+    fetchRecentPosts();
+  }, [id]);
 
-  if (loading) return <div>Loading...</div>; // Display loading state
+  if (loading) return <div>Loading...</div>;
 
   return (
-    <div className="flex flex-col items-center p-4 bg-gray-50 min-h-screen">
-      <PageNav postId={post?.id} />
+    <div className="w-full p-4 bg-gray-50 min-h-screen">
+      <PageNav />
 
-      <div className="max-w-2xl w-full mt-32 shadow-md">
-        <h1 className="text-3xl font-bold text-center">{post?.title}</h1>
+      <div className="max-w-6xl w-full mx-auto mt-32 shadow-md p-6 bg-white rounded-md">
+        <h1 className="text-3xl font-bold text-center mb-4">{post?.title}</h1>
 
         {/* Author Profile Section */}
-        <div className="border-t border-b border-gray-300 p-4 flex items-center justify-center space-x-4">
-          {/* Author Profile Image */}
+        <div className="border-t border-b border-gray-300 py-4 flex items-center justify-center space-x-4">
           <div className="relative">
-          <Image
-  src={isAuthor ? user?.imageUrl || '/path/to/fallback-image.png' : post?.authorProfileImage || '/path/to/fallback-image.png'}
-  alt={`${post?.author}'s profile image`}
-  width={40}
-  height={40}
-  className="w-10 h-10 rounded-full cursor-pointer"
-  onMouseEnter={() => setShowModal(true)} // Show modal on hover
-  onMouseLeave={() => setShowModal(false)} // Hide modal when not hovering
-/>
+            <Image
+              src={isAuthor ? user?.imageUrl || '/path/to/fallback-image.png' : post?.authorProfileImage || '/path/to/fallback-image.png'}
+              alt={`${post?.author}'s profile image`}
+              width={40}
+              height={40}
+              className="w-10 h-10 rounded-full"
+              onMouseEnter={() => setShowModal(true)} // Show modal on hover
+              onMouseLeave={() => setShowModal(false)} // Hide modal when not hovering
+            />
 
             {/* Modal for Author Details */}
             {showModal && post && (
               <div className="absolute z-10 bg-white shadow-md w-52 h-24 flex flex-col items-center justify-center rounded-md mt-2">
                 <div className='flex'>
-                <Image
-  src={isAuthor ? user?.imageUrl || '/path/to/fallback-image.png' : post.authorProfileImage || '/path/to/fallback-image.png'}
-  alt={`${post.author}'s profile`}
-  width={64}
-  height={64}
-  className="w-16 h-16 rounded-full mb-2 object-cover"
-/>
- <p className="text-sm font-bold text-center">{post.author}</p>
+                  <Image
+                    src={isAuthor ? user?.imageUrl || '/path/to/fallback-image.png' : post.authorProfileImage || '/path/to/fallback-image.png'}
+                    alt={`${post.author}'s profile`}
+                    width={64}
+                    height={64}
+                    className="w-16 h-16 rounded-full mb-2 object-cover"
+                  />
+                  <p className="text-sm font-bold text-center">{post.author}</p>
                 </div>
                 <p className="text-xs text-gray-500 text-center">Author details go here.</p>
-                {/* You can add more details about the author here */}
               </div>
             )}
           </div>
 
-          {/* Author Name and Date */}
           <p className="text-sm text-gray-500 text-center">
             By {post?.author} on {post?.createdAt ? new Date(post.createdAt.toDate()).toLocaleDateString() : 'N/A'}
           </p>
@@ -126,17 +120,29 @@ const PostPage = ({ params }: PostPageProps) => {
             alt={post.title}
             width={640}
             height={240}
-            className="w-full h-48 object-cover rounded mb-2"
+            className="w-full h-48 object-cover rounded mb-4"
           />
         )}
 
-        <p className="">{post?.content}</p>
+        <p className="mb-6">{post?.content}</p>
 
+        {/* Comments Section */}
         <CommentsSection postId={post?.id || ''} />
+
+        {isAuthor && (
+          <div className="mt-4 flex justify-end items-center">
+            <Link href={`/post/edit/${post?.id}`}>
+              <div className="flex items-center text-orange-950 hover:text-orange-800 transition duration-300">
+                <FiEdit className="mr-1" />
+                <span>Edit Post</span>
+              </div>
+            </Link>
+          </div>
+        )}
 
         {/* Recent Posts Section */}
         <h2 className="text-2xl font-bold mt-8 mb-4">Recent Posts</h2>
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {recentPosts.map((recentPost) => (
             <div key={recentPost.id} className="border rounded p-4 bg-white shadow-md">
               {recentPost.imageUrl && (

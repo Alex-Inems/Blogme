@@ -6,7 +6,7 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Link from 'next/link';
 import { Timestamp } from 'firebase/firestore';
-import Image from 'next/image'; // Import the Image component from Next.js
+import Image from 'next/image';
 import PageNav from '@/components/PageNav';
 
 interface Post {
@@ -14,24 +14,23 @@ interface Post {
   title: string;
   content: string;
   createdAt: Timestamp;
-  author: string; // Ensure to include the author field
-  imageUrl?: string; // Optional field for the post image
+  author: string;
+  imageUrl?: string;
 }
 
 const StoriesPage: React.FC = () => {
-  const { user } = useUser(); // Clerk's user hook to get the current user
-  const [posts, setPosts] = useState<Post[]>([]); // State for storing posts
-  const [loading, setLoading] = useState(true); // State for loading status
+  const { user } = useUser();
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return; // Ensure the user is logged in
+    if (!user) return;
 
     const fetchPosts = async () => {
       try {
-        // Query Firestore for posts where the author matches the user's full name or username
         const q = query(
           collection(db, 'posts'),
-          where('author', '==', user.fullName || user.username) // Adjust this based on your user object
+          where('author', '==', user.fullName || user.username)
         );
         const querySnapshot = await getDocs(q);
 
@@ -40,28 +39,28 @@ const StoriesPage: React.FC = () => {
           ...doc.data(),
         })) as Post[];
 
-        setPosts(userPosts); // Set fetched posts in state
+        setPosts(userPosts);
       } catch (error) {
         console.error('Error fetching posts:', error);
       } finally {
-        setLoading(false); // Set loading to false once data is fetched
+        setLoading(false);
       }
     };
 
-    fetchPosts(); // Fetch posts for the logged-in user
+    fetchPosts();
   }, [user]);
 
-  if (loading) return <div>Loading your stories...</div>; // Display loading state
+  if (loading) return <div>Loading your stories...</div>;
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
-      <PageNav/>
+      <PageNav />
       <h1 className="text-2xl font-bold mb-4 mt-24">Your Stories</h1>
 
       {posts.length === 0 ? (
         <p className="text-gray-500">You haven&apos;t written any stories yet.</p>
       ) : (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"> {/* Grid layout */}
           {posts.map((post) => (
             <div key={post.id} className="bg-white p-4 rounded-lg shadow-md">
               <h2 className="text-xl font-semibold">{post.title}</h2>
@@ -70,9 +69,9 @@ const StoriesPage: React.FC = () => {
                 <Image
                   src={post.imageUrl}
                   alt={post.title}
-                  width={400} // Adjust width as needed
-                  height={100} // Adjust height as needed
-                  className="rounded mb-2 object-cover" // Use object-cover to maintain aspect ratio
+                  width={400}
+                  height={200}
+                  className="rounded mb-2 object-cover"
                 />
               )}
 
