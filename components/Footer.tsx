@@ -1,5 +1,5 @@
 // components/Footer.tsx
-import { COPYRIGHT_TEXT, SOCIAL_LINKS } from '../Commons/constants';
+import { COPYRIGHT_TEXT } from '../Commons/constants';
 
 const Footer = () => {
   return (

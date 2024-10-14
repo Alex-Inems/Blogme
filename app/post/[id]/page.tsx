@@ -9,6 +9,7 @@ import CommentsSection from '@/components/Comments'; // Import CommentsSection
 import Image from 'next/image'; // Import Image component from Next.js
 import Link from 'next/link'; // Import Next.js Link component
 import { FiEdit } from 'react-icons/fi'; // Import Edit icon
+import { FaFacebookF, FaTwitter, FaWhatsapp } from 'react-icons/fa'; // Import social icons
 
 interface Post {
   id: string;
@@ -68,6 +69,28 @@ const PostPage = ({ params }: PostPageProps) => {
     fetchPost();
     fetchRecentPosts();
   }, [id]);
+
+  const shareOnSocialMedia = (platform: 'facebook' | 'twitter' | 'whatsapp') => {
+    const url = encodeURIComponent(window.location.href);
+    const message = encodeURIComponent(`Check out this post: ${post?.title}`);
+
+    let shareUrl = '';
+    switch (platform) {
+      case 'facebook':
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+        break;
+      case 'twitter':
+        shareUrl = `https://twitter.com/intent/tweet?text=${message}&url=${url}`;
+        break;
+      case 'whatsapp':
+        shareUrl = `https://wa.me/?text=${message} ${url}`;
+        break;
+      default:
+        break;
+    }
+
+    window.open(shareUrl, '_blank');
+  };
 
   if (loading) return <div>Loading...</div>;
 
@@ -137,6 +160,21 @@ const PostPage = ({ params }: PostPageProps) => {
                 <span>Edit Post</span>
               </div>
             </Link>
+          </div>
+        )}
+
+        {/* Social Sharing Section */}
+        {user && (
+          <div className="mt-6 flex justify-center space-x-4">
+            <button onClick={() => shareOnSocialMedia('facebook')} className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+              <FaFacebookF className="mr-2" /> Share on Facebook
+            </button>
+            <button onClick={() => shareOnSocialMedia('twitter')} className="flex items-center justify-center px-4 py-2 bg-blue-400 text-white rounded-md hover:bg-blue-500 transition">
+              <FaTwitter className="mr-2" /> Share on Twitter
+            </button>
+            <button onClick={() => shareOnSocialMedia('whatsapp')} className="flex items-center justify-center px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition">
+              <FaWhatsapp className="mr-2" /> Share on WhatsApp
+            </button>
           </div>
         )}
 
