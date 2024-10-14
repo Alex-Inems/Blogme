@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 import { navibarLinks } from '@/Commons/constants';
 import { cn } from '@/lib/utils';
 import MobileNav from './Mobilenav';
-import { FiHome, FiEdit3, FiBookOpen } from 'react-icons/fi'; // New Icons for Blog and Stories
+import { FiHome, FiEdit3, FiBookOpen } from 'react-icons/fi';
 import { db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import Image from 'next/image';
@@ -60,6 +60,11 @@ const Navbar = () => {
                         <FiBookOpen key="stories" size={24} />,
                     ];
 
+                    // Check if the item is "Blog" or "Stories" and if the user is logged in
+                    if ((item.label === 'Blog' || item.label === 'Stories') && !user) {
+                        return null; // Don't render links for Blog or Stories if user is not logged in
+                    }
+
                     return (
                         <Link
                             href={item.route}
@@ -93,7 +98,6 @@ const Navbar = () => {
                     ) : (
                         <div className="w-10 h-10 rounded-full bg-gray-300"></div> // Placeholder for loading
                     )}
-                    {/* Show Profile button only on large and tablet screens */}
                     <Link
                         href="/profile"
                         className="hidden md:block lg:block bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out"
