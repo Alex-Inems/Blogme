@@ -50,7 +50,7 @@ Run the development server:
 bash
 Copy code
 npm run dev
-Your application should now be running at http://localhost:3000.
+Your application should now be running at https://me-blogs-bice.vercel.app
 
 Usage
 Sign In: Users can sign in using Clerk's authentication.
