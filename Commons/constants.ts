@@ -44,16 +44,7 @@ export const sidebarLinks = [
     route: '/stories',
     label: 'Stories',
   },
-  {
-    imgURL: '/icons/Video.svg',
-    route: '/recordings',
-    label: 'Recordings',
-  },
-  {
-    imgURL: '/icons/add-personal.svg',
-    route: '/personal-room',
-    label: 'Personal Room',
-  },
+  
 ];
 export const navibarLinks = [
   {

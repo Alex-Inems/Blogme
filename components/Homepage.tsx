@@ -90,7 +90,9 @@ const Home = () => {
           Sign In
         </Link>
       ) : (
-        <div className="flex items-center mb-8 text-lg">
+        <div>
+          <div className=" flex items-center mb-4 text-lg">
+
           <p className="text-center">Hello, {user?.fullName || user?.username || 'User'}!</p>
           {profileImageUrl && (
             <Image
@@ -101,6 +103,13 @@ const Home = () => {
               className="rounded-full ml-4"
             />
           )}
+          </div>
+          <div className='mb-5 text-center'>
+            <Link href="/profile" className="bg-blue-500 text-white px-6 py-3 rounded shadow-lg hover:bg-blue-600 transition mb-8">
+          Profile
+        </Link>
+
+          </div>
         </div>
       )}
 
