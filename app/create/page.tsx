@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { collection, addDoc, doc, getDoc, Timestamp } from 'firebase/firestore';
-import { db, storage } from '@/lib/firebase'; // Import Firebase config
+import { db, storage } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { HiPlus } from 'react-icons/hi';
 import CreatePostNavbar from '@/components/CreatePostNavbar';
 import Image from 'next/image';
+import DOMPurify from 'dompurify';
 
 interface PostData {
     title: string;
@@ -17,6 +18,7 @@ interface PostData {
     createdAt: Timestamp;
     imageUrl: string | null;
     authorProfileImage: string | null;
+    readingTime?: number; // Add reading time property
 }
 
 const CreatePost: React.FC = () => {
@@ -24,18 +26,17 @@ const CreatePost: React.FC = () => {
     const [title, setTitle] = useState<string>('');
     const [content, setContent] = useState<string>('');
     const [imageFile, setImageFile] = useState<File | null>(null);
-    const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null); // Store profile image URL
+    const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
     const router = useRouter();
 
-    // Fetch the profile image from Firestore based on user ID
     useEffect(() => {
         const fetchUserProfileImage = async () => {
             if (user?.id) {
-                const userDocRef = doc(db, 'users', user.id); // Assuming 'users' collection stores user profiles
+                const userDocRef = doc(db, 'users', user.id);
                 const userDoc = await getDoc(userDocRef);
                 if (userDoc.exists()) {
                     const userData = userDoc.data();
-                    setProfileImageUrl(userData?.profileImageUrl || '/default-profile.png'); // Set profile image
+                    setProfileImageUrl(userData?.profileImageUrl || '/default-profile.png');
                 }
             }
         };
@@ -53,23 +54,32 @@ const CreatePost: React.FC = () => {
         return downloadURL;
     };
 
+    const calculateReadingTime = (content: string): number => {
+        const words = content.trim().split(/\s+/).length;
+        return Math.ceil(words / 250); // Average reading speed of 250 words per minute
+    };
+
     const handleSubmit = async (): Promise<void> => {
         let imageUrl: string | null = null;
         if (imageFile) {
             imageUrl = await handleImageUpload(imageFile);
         }
 
+        const sanitizedContent = DOMPurify.sanitize(content);
+        const readingTime = calculateReadingTime(sanitizedContent); // Calculate reading time
+
         const postData: PostData = {
             title,
-            content,
-            author: user?.fullName || user?.firstName || user?.username || 'Anonymous', // Use available name fields
+            content: sanitizedContent,
+            author: user?.fullName || user?.firstName || user?.username || 'Anonymous',
             createdAt: Timestamp.fromDate(new Date()),
             imageUrl: imageUrl || null,
-            authorProfileImage: profileImageUrl, // Use the stored profile image from Firestore
+            authorProfileImage: profileImageUrl,
+            readingTime, // Include reading time
         };
 
         await addDoc(collection(db, 'posts'), postData);
-        router.push('/'); // Redirect to homepage after submission
+        router.push('/');
     };
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -86,7 +96,7 @@ const CreatePost: React.FC = () => {
     return (
         <div className="flex flex-col min-h-screen p-4 bg-gray-50 mt-20">
             <CreatePostNavbar onSubmit={handleSubmit} />
-            <h1 className="text-4xl font-bold mb-4">Create a New Post</h1>
+            <h1 className="mt-20 text-4xl font-bold mb-4">Create a New Post</h1>
             <form
                 onSubmit={(e) => {
                     e.preventDefault();

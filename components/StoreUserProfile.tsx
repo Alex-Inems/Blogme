@@ -1,4 +1,5 @@
-'use client';
+'use client'
+// StoreUserProfile.tsx
 
 import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
@@ -8,6 +9,7 @@ import { doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { storage } from '@/lib/firebase';
 import Image from 'next/image';
+import { followUser } from '../lib/userFollowUtils'; // Adjust the import path
 
 const StoreUserProfile = () => {
   const { user } = useUser();
@@ -18,6 +20,7 @@ const StoreUserProfile = () => {
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
   const [introduction, setIntroduction] = useState<string>('');
   const [topics, setTopics] = useState<string[]>([]);
+  const [following, setFollowing] = useState<string[]>([]); // State to store following users
 
   useEffect(() => {
     const checkAndFetchUserProfile = async () => {
@@ -34,6 +37,7 @@ const StoreUserProfile = () => {
           introduction: '',
           topics: [],
           profileImageUrl: null,
+          following: [], // Initialize following array
         };
         await setDoc(userRef, defaultProfile);
         console.log('User document created with default values');
@@ -43,17 +47,16 @@ const StoreUserProfile = () => {
         setIntroduction(data.introduction || '');
         setTopics(data.topics || []);
         setProfileImageUrl(data.profileImageUrl || null);
+        setFollowing(data.following || []); // Get the following list
       }
     };
 
     if (user) {
       setUsername(user.username || '');
       setEmail(user.emailAddresses[0]?.emailAddress || '');
-      
-      // Check for existing profile and fetch if it exists
       checkAndFetchUserProfile();
     }
-  }, [user]); // Removed checkAndFetchUserProfile from dependency array
+  }, [user]);
 
   const handleImageUpload = async (file: File): Promise<string> => {
     if (!user) throw new Error('User is not defined');
@@ -74,7 +77,7 @@ const StoreUserProfile = () => {
       introduction?: string;
       topics?: string[];
       profileImageUrl?: string;
-    } = {}; // Defined specific types for updates
+    } = {};
 
     if (username !== user.username) updates.username = username;
     if (email !== user.emailAddresses[0]?.emailAddress) updates.email = email;
@@ -93,7 +96,6 @@ const StoreUserProfile = () => {
     const userRef = doc(db, 'users', user.id);
     
     try {
-      // Check if document exists before updating
       const docSnapshot = await getDoc(userRef);
       if (!docSnapshot.exists()) {
         console.error('No document found for user ID:', user.id);
@@ -102,7 +104,7 @@ const StoreUserProfile = () => {
 
       await updateDoc(userRef, updates);
       console.log('Profile updated successfully');
-      router.push('/'); // Redirect after successful update
+      router.push('/');
     } catch (error) {
       console.error('Error updating profile:', (error as Error).message);
     }
@@ -116,11 +118,22 @@ const StoreUserProfile = () => {
     }
   };
 
+  const handleFollowUser = async (targetUserId: string) => {
+    if (!user) return;
+
+    try {
+      await followUser(user.id, targetUserId);
+      // Optionally update local state to reflect the new following
+      setFollowing((prevFollowing) => [...prevFollowing, targetUserId]);
+    } catch (error) {
+      console.error('Error following user:', (error as Error).message);
+    }
+  };
+
   return (
     <div className="max-w-lg mx-auto p-6 bg-transparent rounded-lg shadow-md h-full md:max-w-3xl lg:max-w-5xl">
       <h2 className="text-2xl lg:text-4xl font-bold text-center mb-6 text-purple-900">Update Your Profile</h2>
       <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        
         {/* Username Input */}
         <div>
           <label htmlFor="username" className="text-white font-semibold mb-1 block">Username</label>
@@ -185,24 +198,25 @@ const StoreUserProfile = () => {
           />
         </div>
 
-        {/* Topics of Interest */}
+        {/* Topics Input */}
         <div className="col-span-1 md:col-span-2">
-          <label htmlFor="topics" className="text-white font-semibold mb-1 block">Topics of Interest (comma separated)</label>
+          <label htmlFor="topics" className="text-white font-semibold mb-1 block">Topics of Interest</label>
           <input
             id="topics"
             type="text"
             value={topics.join(', ')}
             onChange={(e) => setTopics(e.target.value.split(',').map(topic => topic.trim()))}
-            placeholder="e.g., Technology, Science, Art"
+            placeholder="Comma-separated list of topics"
             className="p-3 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-900 transition duration-200 w-full"
           />
         </div>
 
-        {/* Update Profile Button */}
-        <button type="submit" className="bg-slate-900 text-white px-4 py-2 rounded shadow-md hover:bg-purple-950 transition duration-200 col-span-1 md:col-span-2">
-          Update Profile
-        </button>
+        {/* Update Button */}
+        <div className="col-span-1 md:col-span-2">
+          <button type="submit" className="w-full bg-purple-900 text-white font-bold py-3 rounded shadow hover:bg-purple-700 transition duration-200">Update Profile</button>
+        </div>
       </form>
+
     </div>
   );
 };

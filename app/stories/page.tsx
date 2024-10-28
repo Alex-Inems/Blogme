@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Link from 'next/link';
-import { Timestamp } from 'firebase/firestore';
 import Image from 'next/image';
 import PageNav from '@/components/PageNav';
 
@@ -16,6 +15,7 @@ interface Post {
   createdAt: Timestamp;
   author: string;
   imageUrl?: string;
+  readingTime?: number; // Add readingTime property
 }
 
 const StoriesPage: React.FC = () => {
@@ -36,10 +36,16 @@ const StoriesPage: React.FC = () => {
 
         const userPosts: Post[] = querySnapshot.docs.map((doc) => ({
           id: doc.id,
-          ...doc.data(),
+          ...(doc.data() as Omit<Post, 'id'>),
         })) as Post[];
 
-        setPosts(userPosts);
+        // Calculate reading time for each post
+        const postsWithReadingTime = userPosts.map(post => ({
+          ...post,
+          readingTime: Math.ceil(post.content.split(' ').length / 200), // Approximate reading time (200 words/minute)
+        }));
+
+        setPosts(postsWithReadingTime);
       } catch (error) {
         console.error('Error fetching posts:', error);
       } finally {
@@ -77,7 +83,7 @@ const StoriesPage: React.FC = () => {
 
               <p className="text-gray-700 mt-2">{post.content.slice(0, 100)}...</p>
               <p className="text-sm text-gray-500 mt-2">
-                Created on {post.createdAt.toDate().toLocaleDateString()}
+                Created on {post.createdAt.toDate().toLocaleDateString()} - Estimated reading time: {post.readingTime} minute{post.readingTime !== 1 ? 's' : ''}
               </p>
               <Link href={`/post/${post.id}`} className="text-blue-500 mt-2 inline-block">
                 Read more
