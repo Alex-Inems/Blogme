@@ -16,7 +16,7 @@ interface Post {
   authorProfileImage: string;
   createdAt: Timestamp;
   imageUrl: string;
-  readingTime?: number; // Add readingTime property
+  readingTime?: number;
 }
 
 const Home = () => {
@@ -25,10 +25,9 @@ const Home = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [postsPerPage] = useState(9); // Display 9 posts per page
+  const [postsPerPage] = useState(9);
   const [profileImageUrl, setProfileImageUrl] = useState('/default-profile.png');
 
-  // Fetch user profile image from Firebase
   useEffect(() => {
     const fetchUserProfileImage = async () => {
       if (user?.id) {
@@ -40,17 +39,13 @@ const Home = () => {
         }
       }
     };
-
-    if (isSignedIn) {
-      fetchUserProfileImage();
-    }
+    if (isSignedIn) fetchUserProfileImage();
   }, [isSignedIn, user?.id]);
 
-  // Fetch and sort posts from Firestore by createdAt (most recent first)
   useEffect(() => {
     const fetchPosts = async () => {
       const postsCollection = collection(db, 'posts');
-      const postsQuery = query(postsCollection, orderBy('createdAt', 'desc')); // Sort by most recent
+      const postsQuery = query(postsCollection, orderBy('createdAt', 'desc'));
       const postSnapshot = await getDocs(postsQuery);
       const postList = postSnapshot.docs.map(doc => ({
         ...(doc.data() as Omit<Post, 'id'>),
@@ -59,7 +54,6 @@ const Home = () => {
       setPosts(postList);
       setFilteredPosts(postList);
     };
-
     fetchPosts();
   }, []);
 
@@ -70,21 +64,16 @@ const Home = () => {
       post.author.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredPosts(filtered);
-    setCurrentPage(1); // Reset to first page on search
+    setCurrentPage(1);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
+    if (e.key === 'Enter') handleSearch();
   };
 
-  // Calculate the current posts to display
   const indexOfLastPost = currentPage * postsPerPage;
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
   const currentPosts = filteredPosts.slice(indexOfFirstPost, indexOfLastPost);
-
-  // Pagination controls
   const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
 
   return (
@@ -139,14 +128,10 @@ const Home = () => {
         </button>
       </div>
 
-      <div className="container mx-auto p-4">
-        <h2 className="text-3xl font-bold mb-4">Latest Posts</h2>
-        
-        {/* Thin gray line after Latest Posts */}
-        <div className="border-t border-gray-300 my-4 w-full"></div>
-
-        <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
-          {currentPosts.length > 0 && currentPosts.map(post => (
+      <div className="container mx-auto p-4 flex flex-col lg:flex-row">
+        {/* Posts Section */}
+        <div className="lg:w-3/5 grid grid-cols-1 gap-6 border-r border-gray-300 pr-4">
+          {currentPosts.map(post => (
             <div key={post.id} className="border rounded-lg overflow-hidden shadow transition hover:shadow-xl">
               <Link href={`/post/${post.id}`}>
                 <Image
@@ -182,29 +167,43 @@ const Home = () => {
           ))}
         </div>
 
-        {/* Thin gray line after Latest Posts */}
-        <div className="border-t border-gray-300 my-4 mt-10 w-full"></div>
+        {/* Recommendations Section */}
+        <aside className="hidden lg:block lg:w-2/5 lg:pl-8">
+          <div className="sticky top-20">
+            <h3 className="text-2xl font-semibold mb-4">Recommended Posts</h3>
+            <ul className="space-y-4">
+              {filteredPosts.slice(0, 5).map(post => (
+                <li key={post.id} className="border rounded-lg p-4 shadow transition hover:shadow-lg">
+                  <Link href={`/post/${post.id}`}>
+                    <p className="font-bold text-lg">{post.title}</p>
+                    <p className="text-sm text-gray-600">{post.content.slice(0, 50)}...</p>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </aside>
+      </div>
 
-        {/* Pagination Controls */}
-        <div className="flex justify-center mt-6">
-          <button
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            className="bg-blue-500 text-white px-4 py-2 rounded-l hover:bg-blue-600 transition disabled:bg-gray-400"
-          >
-            Previous
-          </button>
-          <span className="flex items-center px-4 text-gray-700">
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className="bg-blue-500 text-white px-4 py-2 rounded-r hover:bg-blue-600 transition disabled:bg-gray-400"
-          >
-            Next
-          </button>
-        </div>
+      {/* Pagination Controls */}
+      <div className="flex justify-center mt-6">
+        <button
+          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+          disabled={currentPage === 1}
+          className="bg-blue-500 text-white px-4 py-2 rounded-l hover:bg-blue-600 transition disabled:bg-gray-400"
+        >
+          Previous
+        </button>
+        <span className="flex items-center px-4 text-gray-700">
+          Page {currentPage} of {totalPages}
+        </span>
+        <button
+          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+          disabled={currentPage === totalPages}
+          className="bg-blue-500 text-white px-4 py-2 rounded-r hover:bg-blue-600 transition disabled:bg-gray-400"
+        >
+          Next
+        </button>
       </div>
     </section>
   );
