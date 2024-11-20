@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/navigation';
 import { addDoc, collection } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useUser } from '@clerk/nextjs';  // Clerk authentication
