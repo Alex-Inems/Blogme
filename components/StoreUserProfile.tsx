@@ -1,3 +1,4 @@
+'use client'
 // StoreUserProfile.tsx
 import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
