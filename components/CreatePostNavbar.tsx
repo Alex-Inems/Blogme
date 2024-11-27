@@ -54,11 +54,11 @@ const CreatePostNavbar = ({ onSubmit }: CreatePostNavbarProps) => {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 flex justify-between items-center w-full px-6 lg:px-10 lg:py-4 bg-white transition-shadow duration-300 ${isScrolled ? 'shadow-lg' : ''} z-50`}
+      className={`dark:bg-gray-950 fixed top-0 left-0 right-0 flex justify-between items-center w-full px-6 lg:px-10 lg:py-4 bg-white transition-shadow duration-300 ${isScrolled ? 'shadow-lg' : ''} z-50`}
     >
       <Link href="/" className="flex items-center gap-1">
-        <p className="text-[26px] font-extrabold text-orange-950">
-          Me<span className="text-orange-950">Blog</span>
+        <p className="text-[26px] font-extrabold text-orange-950 dark:text-white">
+          Me<span className="text-orange-950 dark:text-orange-700">Blog</span>
         </p>
       </Link>
 

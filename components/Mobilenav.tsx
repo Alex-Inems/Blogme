@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { FiMenu } from 'react-icons/fi'; // Imported FiMenu icon
 
 import { Sheet, SheetClose, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { sidebarLinks } from '@/Commons/constants';
@@ -15,22 +16,11 @@ const MobileNav = () => {
     <section className="w-full max-w-[264px]">
       <Sheet>
         <SheetTrigger asChild>
-          <Image
-            src="/images/menu-black.jpg"
-            width={36}
-            height={38}
-            alt="hamburger icon"
-            className="cursor-pointer sm:hidden"
-          />
+          {/* Replaced Image hamburger with FiMenu icon */}
+          <FiMenu size={30} className="cursor-pointer sm:hidden text-black dark:text-white" />
         </SheetTrigger>
         <SheetContent side="left" className="border-none bg-dark-1">
           <Link href="/" className="flex items-center gap-1">
-            {/* <Image
-              src="/icons/logo.svg"
-              width={32}
-              height={32}
-              alt="yoom logo"
-            /> */}
             <p className="text-[26px] font-extrabold text-orange-900">MeBlog</p>
           </Link>
           <div className="flex h-[calc(100vh-72px)] flex-col justify-between overflow-y-auto">

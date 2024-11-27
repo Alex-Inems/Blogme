@@ -77,12 +77,12 @@ const Home = () => {
   const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
 
   return (
-    <section className="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100 mt-20">
+    <section className="dark:bg-slate-900 dark:text-white flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100 mt-20">
       <Header />
-      <h1 className="mt-20 text-5xl font-bold mb-4 text-center text-orange-950">
+      <h1 className="dark:text-orange-700 mt-20 text-5xl font-bold mb-4 text-center text-orange-950">
         Welcome to Our Blogging Platform!
       </h1>
-      <p className="text-xl mb-8 text-center text-gray-700">
+      <p className="dark:text-white text-xl mb-8 text-center text-gray-700">
         Connect, share your thoughts, and read amazing articles from writers around the globe.
       </p>
 
@@ -132,7 +132,7 @@ const Home = () => {
         {/* Posts Section */}
         <div className="lg:w-3/5 grid grid-cols-1 gap-6 border-r border-gray-300 pr-4">
           {currentPosts.map(post => (
-            <div key={post.id} className="border rounded-lg overflow-hidden shadow transition hover:shadow-xl">
+            <div key={post.id} className="border dark:border-gray-600 rounded-lg overflow-hidden shadow transition hover:shadow-xl">
               <Link href={`/post/${post.id}`}>
                 <Image
                   src={post.imageUrl || '/default-image.png'}
@@ -143,8 +143,8 @@ const Home = () => {
                 />
                 <div className="p-4">
                   <h3 className="text-xl font-semibold mb-2">{post.title}</h3>
-                  <p className="text-gray-600">{post.content.slice(0, 100)}...</p>
-                  <p className="mt-2 text-sm text-gray-500 flex items-center">
+                  <p className="text-gray-600 dark:text-gray-300">{post.content.slice(0, 100)}...</p>
+                  <p className="mt-2 text-sm dark:text-gray-400  text-gray-500 flex items-center">
                     By {post.author} on {post.createdAt.toDate().toLocaleDateString()}
                     {post.authorProfileImage && (
                       <Image
@@ -170,13 +170,13 @@ const Home = () => {
         {/* Recommendations Section */}
         <aside className="hidden lg:block lg:w-2/5 lg:pl-8">
           <div className="sticky top-20">
-            <h3 className="text-2xl font-semibold mb-4">Recommended Posts</h3>
+            <h3 className="dark:text-orange-700 text-2xl font-semibold mb-4">Recommended Posts</h3>
             <ul className="space-y-4">
               {filteredPosts.slice(0, 5).map(post => (
-                <li key={post.id} className="border rounded-lg p-4 shadow transition hover:shadow-lg">
+                <li key={post.id} className="border dark:border-gray-600 rounded-lg p-4 shadow transition hover:shadow-lg">
                   <Link href={`/post/${post.id}`}>
                     <p className="font-bold text-lg">{post.title}</p>
-                    <p className="text-sm text-gray-600">{post.content.slice(0, 50)}...</p>
+                    <p className="text-sm dark:text-gray-400 text-gray-600">{post.content.slice(0, 50)}...</p>
                   </Link>
                 </li>
               ))}

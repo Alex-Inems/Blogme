@@ -94,7 +94,7 @@ const CreatePost: React.FC = () => {
     }
 
     return (
-        <div className="flex flex-col min-h-screen p-4 bg-gray-50 mt-20">
+        <div className="dark:bg-gray-950 dark:text-white  flex flex-col min-h-screen p-4 bg-gray-50 mt-20">
             <CreatePostNavbar onSubmit={handleSubmit} />
             <h1 className="mt-20 text-4xl font-bold mb-4">Create a New Post</h1>
             <form

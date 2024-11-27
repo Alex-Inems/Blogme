@@ -20,7 +20,7 @@ export default function RootLayout({
     {/* <head>
     <link rel="icon" href="/favicon.ico" type="image/x-icon" />
     </head> */}
-        <body>
+        <body className="dark:bg-gray-950">
         <ClerkProvider>
           
           {children}

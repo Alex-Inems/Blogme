@@ -96,10 +96,10 @@ const PostPage = ({ params }: PostPageProps) => {
   if (loading) return <div>Loading...</div>;
 
   return (
-    <div className="w-full p-4 bg-gray-50 min-h-screen">
+    <div className="w-full p-4 dark:bg-slate-950 bg-gray-50 min-h-screen">
       <PageNav />
 
-      <div className="max-w-6xl w-full mx-auto mt-32 shadow-md p-6 bg-white rounded-md">
+      <div className="max-w-6xl w-full mx-auto mt-32 shadow-md p-6 dark:bg-slate-950 dark:text-white bg-white rounded-md">
         <h1 className="text-3xl font-bold text-center mb-4">{post?.title}</h1>
 
         <div className="border-t border-b border-gray-300 py-4 flex items-center justify-center space-x-4">
@@ -116,7 +116,7 @@ const PostPage = ({ params }: PostPageProps) => {
 
             {showModal && post && (
               <div
-                className="absolute z-10 bg-white shadow-md w-64 h-auto flex flex-col items-center justify-center rounded-md mt-2 p-2"
+                className="absolute z-10  bg-white shadow-md w-64 h-auto flex flex-col items-center justify-center rounded-md mt-2 p-2"
                 onMouseEnter={() => setShowModal(true)}
                 onMouseLeave={() => setShowModal(false)}
               >
@@ -191,7 +191,7 @@ const PostPage = ({ params }: PostPageProps) => {
         <h2 className="text-2xl font-bold mt-8 mb-4">Recent Posts</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {recentPosts.map((recentPost) => (
-            <div key={recentPost.id} className="border rounded p-4 bg-white shadow-md">
+            <div key={recentPost.id} className="border dark:border-gray-700 rounded p-4 dark:bg-gray-700  bg-white shadow-md">
               {recentPost.imageUrl && (
                 <Image
                   src={recentPost.imageUrl}
@@ -202,7 +202,7 @@ const PostPage = ({ params }: PostPageProps) => {
                 />
               )}
               <h3 className="text-lg font-semibold">{recentPost.title}</h3>
-              <p className="text-sm text-gray-600">{recentPost.content.substring(0, 100)}...</p>
+              <p className="text-sm dark:text-gray-400 text-gray-600">{recentPost.content.substring(0, 100)}...</p>
               <Link href={`/post/${recentPost.id}`} className="text-blue-500 hover:underline mt-2 inline-block">
                 Read more
               </Link>

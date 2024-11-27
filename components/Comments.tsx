@@ -95,7 +95,7 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ postId }) => {
         leaveFrom="translate-x-0"
         leaveTo="translate-x-full"
       >
-        <div className="fixed right-0 top-0 w-1/3 h-full bg-white shadow-lg p-4">
+        <div className="dark:text-white dark:bg-gray-900 text-black fixed right-0 top-0 w-1/3 h-full bg-white shadow-lg p-4">
           <h2 className="text-lg font-bold mb-2">Comments</h2>
           <div className="overflow-y-auto h-80 mb-4">
             {comments.map((comment) => (
@@ -111,7 +111,7 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ postId }) => {
               placeholder="Add a comment..."
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
-              className="flex-1 border rounded p-2"
+              className=" text-black flex-1 border rounded p-2"
             />
             <button type="submit" className="bg-blue-500 text-white p-2 rounded">
               Submit

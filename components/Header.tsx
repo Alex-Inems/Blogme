@@ -6,11 +6,12 @@ import { SignedIn, SignInButton, SignedOut, useUser } from '@clerk/nextjs';
 import { usePathname } from 'next/navigation';
 import { navibarLinks } from '@/Commons/constants';
 import { cn } from '@/lib/utils';
-import MobileNav from './Mobilenav';
-import { FiHome, FiEdit3, FiBookOpen } from 'react-icons/fi';
+import MobileNav from './Mobilenav';  // Imported MobileNav component
+import { FiHome, FiEdit3, FiBookOpen } from 'react-icons/fi';  // Removed FiMenu import
 import { db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import Image from 'next/image';
+import DarkModeToggle from './DarkModeToggle';
 
 const Navbar = () => {
     const pathname = usePathname();
@@ -45,10 +46,10 @@ const Navbar = () => {
     }, [user]);
 
     return (
-        <nav className={`fixed top-0 left-0 right-0 flex flexBetween py-2 w-full px-2 lg:px-10 lg:py-4 bg-white transition-shadow duration-300 ${isScrolled ? 'shadow-lg' : ''} z-50`}>
+        <nav className={`fixed top-0 left-0 right-0 dark:bg-slate-900 dark:text-white flex flexBetween py-2 w-full px-2 lg:px-10 lg:py-4 bg-white transition-shadow duration-300 ${isScrolled ? 'shadow-lg' : ''} z-50`}>
             <Link href="/home" className="flex items-center gap-1">
-                <p className="text-[26px] font-extrabold text-orange-950">
-                    Me<span className='text-orange-950'>Blog</span>
+                <p className="text-[26px] font-extrabold dark:text-white text-orange-950">
+                    Me<span className='dark:text-orange-800 text-orange-950'>Blog</span>
                 </p>
             </Link>
             <div className="flex flexCenter gap-6 max-sm:hidden max-lg:flex">
@@ -60,9 +61,8 @@ const Navbar = () => {
                         <FiBookOpen key="stories" size={24} />,
                     ];
 
-                    // Check if the item is "Blog" or "Stories" and if the user is logged in
                     if ((item.label === 'Blog' || item.label === 'Stories') && !user) {
-                        return null; // Don't render links for Blog or Stories if user is not logged in
+                        return null;
                     }
 
                     return (
@@ -77,6 +77,7 @@ const Navbar = () => {
                     );
                 })}
             </div>
+            <DarkModeToggle />
             <div className="flex flexBetween gap-5">
                 <SignedOut>
                     <SignInButton mode="modal">
@@ -106,7 +107,10 @@ const Navbar = () => {
                     </Link>
                 </SignedIn>
 
-                <MobileNav />
+                {/* Use MobileNav here */}
+                <div className="lg:hidden">
+                    <MobileNav />  {/* Replaced hamburger icon with MobileNav component */}
+                </div>
             </div>
         </nav>
     );
