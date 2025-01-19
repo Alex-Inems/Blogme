@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import {  ClerkProvider} from '@clerk/nextjs'
-
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 export const metadata: Metadata = {
   title: "MeBlog",
@@ -21,7 +21,9 @@ export default function RootLayout({
     <link rel="icon" href="/favicon.ico" type="image/x-icon" />
     </head> */}
         <body className="dark:bg-gray-950">
+
         <ClerkProvider>
+        <SpeedInsights/>
           
           {children}
           <Footer/> 
