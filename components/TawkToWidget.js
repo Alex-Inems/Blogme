@@ -6,7 +6,7 @@ const TawkToWidget = () => {
   useEffect(() => {
     // Tawk.to script injection
     var Tawk_API = Tawk_API || {};
-    var Tawk_LoadStart = new Date();
+    // Removed `Tawk_LoadStart` since it's unused and causes a linting error
     (function () {
       var s1 = document.createElement('script');
       s1.async = true;
