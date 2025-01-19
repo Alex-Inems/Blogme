@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     // Add email to Firestore
     await addDoc(collection(db, 'newsletter'), { email });
     return NextResponse.json({ message: 'Successfully subscribed!' });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to subscribe' }, { status: 500 });
   }
 }

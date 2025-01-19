@@ -7,11 +7,13 @@ const NewsletterForm = () => {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [consent, setConsent] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!consent) {
-      setMessage('You must agree to our terms to subscribe.');
+      setMessage('');
+      setError('You must agree to our terms to subscribe.');
       return;
     }
     try {
@@ -25,17 +27,20 @@ const NewsletterForm = () => {
 
       if (res.ok) {
         setMessage('You have successfully subscribed to the newsletter!');
+        setError('');
         setEmail('');
       } else {
-        setMessage('There was an error subscribing.');
+        setMessage('');
+        setError('There was an error subscribing.');
       }
-    } catch (error) {
-      setMessage('There was an error subscribing.');
+    } catch {
+      setMessage('');
+      setError('There was an error subscribing.');
     }
   };
 
   return (
-    <div className=" flex flex-col items-center bg-slate-900 p-8 rounded-lg shadow-lg mt-10 w-full">
+    <div className="flex flex-col items-center bg-slate-900 p-8 rounded-lg shadow-lg mt-10 w-full">
       <h2 className="text-white text-2xl font-bold mb-4">Stay Updated!</h2>
       <p className="text-white mb-6">Subscribe to our newsletter and never miss out on updates.</p>
       <form onSubmit={handleSubmit} className="w-full">
@@ -44,7 +49,7 @@ const NewsletterForm = () => {
           placeholder="Enter your email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="bg-transparent p-3 w-full rounded-md border-b-2 border-gray-300 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-600"
+          className="text-white bg-transparent p-3 w-full rounded-md border-b-2 border-gray-300 mb-4 "
         />
         <div className="flex items-center mb-4">
           <input
@@ -69,6 +74,7 @@ By selecting on the toggle you agreed to receive newsletter and promotional emai
         </button>
       </form>
       {message && <p className="mt-4 text-white text-center">{message}</p>}
+      {error && <p className="mt-4 text-red-500 text-center">{error}</p>} {/* Show error message */}
     </div>
   );
 };

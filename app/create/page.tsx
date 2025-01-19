@@ -6,7 +6,7 @@ import { db, storage } from '@/lib/firebase';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
-import { HiOutlinePhotograph, HiOutlineVideoCamera, HiPlus } from 'react-icons/hi';
+import { HiOutlinePhotograph, HiOutlineVideoCamera,  } from 'react-icons/hi';
 import CreatePostNavbar from '@/components/CreatePostNavbar';
 import Image from 'next/image';
 import DOMPurify from 'dompurify';
