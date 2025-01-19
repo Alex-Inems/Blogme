@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import {  ClerkProvider} from '@clerk/nextjs'
-import { SpeedInsights } from "@vercel/speed-insights/next"
+import {  ClerkProvider} from '@clerk/nextjs';
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import TawkToWidget from '@/components/TawkToWidget';
 
 export const metadata: Metadata = {
   title: "MeBlog",
@@ -24,7 +25,7 @@ export default function RootLayout({
 
         <ClerkProvider>
         <SpeedInsights/>
-          
+        <TawkToWidget />
           {children}
           <Footer/> 
     </ClerkProvider>
