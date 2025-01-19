@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { FaSun, FaMoon } from 'react-icons/fa'; // Better icons for day and night
 
 const DarkModeToggle: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
@@ -40,7 +41,7 @@ const DarkModeToggle: React.FC = () => {
       onClick={toggleDarkMode}
       className="p-2 rounded-full bg-gray-200 dark:bg-gray-800 text-black dark:text-white"
     >
-      {isDarkMode ? '🌙' : '☀️'}
+      {isDarkMode ? <FaMoon /> : <FaSun />}
     </button>
   );
 };

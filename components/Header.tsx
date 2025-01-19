@@ -80,11 +80,13 @@ const Navbar = () => {
             <DarkModeToggle />
             <div className="flex flexBetween gap-5">
                 <SignedOut>
+                
                     <SignInButton mode="modal">
-                        <button className="bg-orange-950 hover:bg-orange-800 text-white font-bold py-2 px-8 rounded-full shadow-md transition duration-300 ease-in-out whitespace-nowrap">
+                        <button className="hidden lg:block bg-orange-950 hover:bg-orange-800 text-white font-bold py-2 px-8 rounded-full shadow-md transition duration-300 ease-in-out whitespace-nowrap">
                             Sign In
                         </button>
                     </SignInButton>
+                    
                 </SignedOut>
 
                 <SignedIn>
