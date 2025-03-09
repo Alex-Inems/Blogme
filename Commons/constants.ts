@@ -1,9 +1,9 @@
 // utils/constants.ts
 
-export const SITE_NAME = "MeBlog";
+export const SITE_NAME = "Blogme";
 export const SITE_DESCRIPTION = "Showcasing you to the world";
-export const COPYRIGHT_TEXT = `© ${new Date().getFullYear()} MeBlog. All rights reserved.`;
-export const BASE_URL = "https://myblog.com";
+export const COPYRIGHT_TEXT = `© ${new Date().getFullYear()} Blogme. All rights reserved.`;
+export const BASE_URL = "https://blogme.africa";
 
 
 // Navigation Links

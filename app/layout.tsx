@@ -4,7 +4,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import TawkToWidget from '@/components/TawkToWidget';
 
 export const metadata: Metadata = {
-  title: "MeBlog",
+  title: "Blogme",
   description: "You to the World",
 
 };
