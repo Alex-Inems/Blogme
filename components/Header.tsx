@@ -49,7 +49,7 @@ const Navbar = () => {
         <nav className={`fixed top-0 left-0 right-0 dark:bg-slate-900 dark:text-white flex flexBetween py-2 w-full px-2 lg:px-10 lg:py-4 bg-white transition-shadow duration-300 ${isScrolled ? 'shadow-lg' : ''} z-50`}>
             <Link href="/home" className="flex items-center gap-1">
                 <p className="text-[26px] font-extrabold dark:text-white text-orange-950">
-                    Me<span className='dark:text-orange-800 text-orange-950'>Blog</span>
+                    Blog<span className='dark:text-orange-800 text-orange-950'>Me</span>
                 </p>
             </Link>
             <div className="flex flexCenter gap-6 max-sm:hidden max-lg:flex">
