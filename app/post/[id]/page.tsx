@@ -1,6 +1,5 @@
 'use client';
 
-import PageNav from '@/components/PageNav';
 import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { getDoc, doc, collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
@@ -97,22 +96,30 @@ const PostPage = ({ params }: PostPageProps) => {
 
   return (
     <div className="w-full p-4 dark:bg-slate-950 bg-gray-50 min-h-screen">
-      <PageNav />
-
-      <div className="max-w-6xl w-full mx-auto mt-32 shadow-md p-6 dark:bg-slate-950 dark:text-white bg-white rounded-md">
+      <div className="max-w-6xl w-full mx-auto mt-8 shadow-md p-6 dark:bg-slate-950 dark:text-white bg-white rounded-md">
         <h1 className="text-3xl font-bold text-center mb-4">{post?.title}</h1>
 
         <div className="border-t border-b border-gray-300 py-4 flex items-center justify-center space-x-4">
           <div className="relative">
-            <Image
-              src={isAuthor ? user?.imageUrl || '/path/to/fallback-image.png' : post?.authorProfileImage || '/path/to/fallback-image.png'}
-              alt={`${post?.author}'s profile image`}
-              width={40}
-              height={40}
-              className="w-10 h-10 rounded-full"
-              onMouseEnter={() => setShowModal(true)}
-              onMouseLeave={() => setShowModal(false)}
-            />
+            {(isAuthor ? user?.imageUrl : post?.authorProfileImage) ? (
+              <Image
+                src={isAuthor ? user?.imageUrl || '' : post?.authorProfileImage || ''}
+                alt={`${post?.author}'s profile image`}
+                width={40}
+                height={40}
+                className="w-10 h-10 rounded-full"
+                onMouseEnter={() => setShowModal(true)}
+                onMouseLeave={() => setShowModal(false)}
+              />
+            ) : (
+              <div
+                className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center cursor-pointer"
+                onMouseEnter={() => setShowModal(true)}
+                onMouseLeave={() => setShowModal(false)}
+              >
+                <span className="text-white font-bold text-sm">B</span>
+              </div>
+            )}
 
             {showModal && post && (
               <div
@@ -132,9 +139,9 @@ const PostPage = ({ params }: PostPageProps) => {
                 </div>
                 <p className="text-xs text-gray-500 text-center">Author details go here.</p>
                 {!isAuthor && user && post?.author && (
-                  <FollowButton 
-                    authorId={post.author} 
-                    currentUser={user}  
+                  <FollowButton
+                    authorId={post.author}
+                    currentUser={user}
                   />
                 )}
               </div>
@@ -144,11 +151,11 @@ const PostPage = ({ params }: PostPageProps) => {
           <p className="text-sm text-gray-500 text-center">
             By {post?.author} on {post?.createdAt ? new Date(post.createdAt.toDate()).toLocaleDateString() : 'N/A'}
           </p>
-          
+
           {!isAuthor && user && post?.author && (
             <FollowButton authorId={post.author} currentUser={user} />
           )}
-          
+
         </div>
 
         {post?.imageUrl && (

@@ -1,75 +1,89 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { collection, getDocs, Timestamp, doc, getDoc, orderBy, query } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
-import Header from '@/components/Header';
+import { collection, query, orderBy, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import Image from 'next/image';
+import Link from 'next/link';
 import NewsletterForm from './NewsletterForm';
 
 interface Post {
   id: string;
   title: string;
+  slug?: string;
   content: string;
   author: string;
-  authorProfileImage: string;
-  createdAt: Timestamp;
-  imageUrl: string;
+  authorProfileImage?: string;
+  createdAt: { toDate: () => Date };
+  imageUrl?: string;
+  category?: string;
+  topic?: string;
   readingTime?: number;
+  views?: number;
+  likes?: number;
 }
 
-const Home = () => {
+const Homepage = () => {
   const { user, isSignedIn } = useUser();
   const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [postsPerPage] = useState(9);
-  const [profileImageUrl, setProfileImageUrl] = useState('/default-profile.png');
-
-  useEffect(() => {
-    const fetchUserProfileImage = async () => {
-      if (user?.id) {
-        const userDocRef = doc(db, 'users', user.id);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          setProfileImageUrl(userData?.profileImageUrl || '/default-profile.png');
-        }
-      }
-    };
-    if (isSignedIn) fetchUserProfileImage();
-  }, [isSignedIn, user?.id]);
+  const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  const postsPerPage = 6;
 
   useEffect(() => {
     const fetchPosts = async () => {
-      const postsCollection = collection(db, 'posts');
-      const postsQuery = query(postsCollection, orderBy('createdAt', 'desc'));
-      const postSnapshot = await getDocs(postsQuery);
-      const postList = postSnapshot.docs.map(doc => ({
-        ...(doc.data() as Omit<Post, 'id'>),
-        id: doc.id,
-      }));
-      setPosts(postList);
-      setFilteredPosts(postList);
+      try {
+        const postsRef = collection(db, 'posts');
+        const q = query(postsRef, orderBy('createdAt', 'desc'));
+        const querySnapshot = await getDocs(q);
+        const postsData = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Post[];
+        setPosts(postsData);
+        setFilteredPosts(postsData);
+      } catch (error) {
+        console.error('Error fetching posts:', error);
+      } finally {
+        setLoading(false);
+      }
     };
+
     fetchPosts();
   }, []);
 
-  const handleSearch = () => {
-    const filtered = posts.filter(post =>
-      post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.author.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredPosts(filtered);
+  useEffect(() => {
+    if (user?.imageUrl) {
+      setProfileImageUrl(user.imageUrl);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (searchTerm.trim() === '') {
+      setFilteredPosts(posts);
+    } else {
+      const filtered = posts.filter(post =>
+        post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        post.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        post.content.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredPosts(filtered);
+    }
     setCurrentPage(1);
+  }, [searchTerm, posts]);
+
+  const handleSearch = () => {
+    // Search is handled by useEffect
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') handleSearch();
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
   };
 
   const indexOfLastPost = currentPage * postsPerPage;
@@ -77,142 +91,261 @@ const Home = () => {
   const currentPosts = filteredPosts.slice(indexOfFirstPost, indexOfLastPost);
   const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
 
-  return (
-    <section className="dark:bg-slate-900 dark:text-white flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100 mt-20">
-  <Header />
-  <h1 className="dark:text-orange-700 mt-20 text-3xl font-bold mb-4 text-center text-orange-950 md:text-5xl">
-    Welcome to Our Blogging Platform!
-  </h1>
-  <p className="dark:text-white text-lg mb-8 text-center text-gray-700 md:text-xl">
-    Connect, share your thoughts, and read amazing articles from writers around the globe.
-  </p>
-
-  {!isSignedIn ? (
-    <Link href="/sign-in" className="bg-blue-500 text-white px-6 py-3 rounded shadow-lg hover:bg-blue-600 transition mb-8">
-      Sign In
-    </Link>
-  ) : (
-    <div>
-      <div className="flex flex-col items-center mb-4 text-lg md:flex-row">
-        <p className="text-center">Hello, {user?.fullName || user?.username || 'User'}!</p>
-        {profileImageUrl && (
-          <Image
-            src={profileImageUrl}
-            alt="User profile"
-            width={48}
-            height={48}
-            className="rounded-full mt-2 md:ml-4"
-          />
-        )}
-      </div>
-      <div className='mb-5 text-center'>
-        <Link href="/profile" className="bg-blue-500 text-white px-6 py-3 rounded shadow-lg hover:bg-blue-600 transition mb-8">
-          Profile
-        </Link>
-      </div>
-    </div>
-  )}
-
-  <div className="mb-4 flex w-full max-w-md mx-auto">
-    <input
-      type="text"
-      placeholder="Search by keyword, title, or author"
-      value={searchTerm}
-      onChange={(e) => setSearchTerm(e.target.value)}
-      onKeyDown={handleKeyPress}
-      className="shadow border rounded-l w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500" 
-    />
-    <button
-      onClick={handleSearch}
-      className="bg-blue-500 text-white px-4 py-3 rounded-r hover:bg-blue-600 transition">
-      Search
-    </button>
-  </div>
-
-  <div className="container mx-auto p-4 flex flex-col lg:flex-row">
-    {/* Posts Section */}
-    <div className="lg:w-3/5 grid grid-cols-1 gap-6 border-r border-gray-300 pr-4">
-      {currentPosts.map(post => (
-        <div key={post.id} className="border dark:border-gray-600 rounded-lg overflow-hidden shadow transition hover:shadow-xl">
-          <Link href={`/post/${post.id}`}>
-            <Image
-              src={post.imageUrl || '/default-image.png'}
-              alt={post.title}
-              width={600}
-              height={192}
-              className="w-full h-48 object-cover"
-            />
-            <div className="p-4">
-              <h3 className="text-xl font-semibold mb-2">{post.title}</h3>
-              <p className="text-gray-600 dark:text-gray-300">{post.content.slice(0, 100)}...</p>
-              <p className="mt-2 text-sm dark:text-gray-400  text-gray-500 flex items-center">
-                By {post.author} on {post.createdAt.toDate().toLocaleDateString()}
-                {post.authorProfileImage && (
-                  <Image
-                    src={post.authorProfileImage}
-                    alt={`${post.author}'s profile`}
-                    width={24}
-                    height={24}
-                    className="inline-block w-6 h-6 rounded-full ml-2"
-                  />
-                )}
-              </p>
-              {post.readingTime && (
-                <p className="mt-2 text-sm text-red-700">
-                  Estimated reading time: <span className='text-green-600'>{post.readingTime} minute{post.readingTime > 1 ? 's' : ''}</span>
-                </p>
-              )}
-            </div>
-          </Link>
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-slate-900">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading stories...</p>
         </div>
-      ))}
-    </div>
-
-    {/* Recommendations Section */}
-    <aside className="lg:block hidden lg:w-2/5 lg:pl-8 mt-8 lg:mt-0">
-      <div className="sticky top-20">
-        <h3 className="dark:text-orange-700 text-2xl font-semibold mb-4">Recommended Posts</h3>
-        <ul className="space-y-4">
-          {filteredPosts.slice(0, 5).map(post => (
-            <li key={post.id} className="border dark:border-gray-600 rounded-lg p-4 shadow transition hover:shadow-lg">
-              <Link href={`/post/${post.id}`}>
-                <p className="font-bold text-lg">{post.title}</p>
-                <p className="text-sm dark:text-gray-400 text-gray-600">{post.content.slice(0, 50)}...</p>
-              </Link>
-            </li>
-          ))}
-        </ul>
       </div>
-    </aside>
-  </div>
+    );
+  }
 
-  {/* Pagination Controls */}
-  <div className="flex justify-center mt-6">
-    <button
-      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-      disabled={currentPage === 1}
-      className="bg-blue-500 text-white px-4 py-2 rounded-l hover:bg-blue-600 transition disabled:bg-gray-400"
-      aria-label="Go to previous page"
-    >
-      Previous
-    </button>
-    <span className="flex items-center px-4 text-gray-700">
-      Page {currentPage} of {totalPages}
-    </span>
-    <button
-      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-      disabled={currentPage === totalPages}
-      className="bg-blue-500 text-white px-4 py-2 rounded-r hover:bg-blue-600 transition disabled:bg-gray-400"
-      aria-label="Go to next page"
-    >
-      Next
-    </button>
-  </div>
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-br from-orange-500 via-orange-600 to-red-600 text-white py-16 lg:py-24">
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="relative w-full px-1">
+          <div className="max-w-6xl mx-auto text-center">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+              Share Your Story with the World
+            </h1>
+            <p className="text-xl sm:text-2xl mb-8 text-orange-100 max-w-3xl mx-auto leading-relaxed">
+              Connect, inspire, and discover amazing stories from writers around the globe.
+              Your voice matters, and we're here to amplify it.
+            </p>
 
-  <NewsletterForm/>
-</section>
+            {/* Search Bar */}
+            <div className="max-w-2xl mx-auto mb-8">
+              <div className="flex bg-white rounded-lg shadow-2xl overflow-hidden">
+                <input
+                  type="text"
+                  placeholder="Search stories, topics, or authors..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  className="flex-1 px-6 py-4 text-gray-800 text-lg focus:outline-none"
+                />
+                <button
+                  onClick={handleSearch}
+                  className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-4 font-semibold transition-colors duration-200"
+                >
+                  Search
+                </button>
+              </div>
+            </div>
 
+            {/* Auth Section */}
+            {!isSignedIn ? (
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link
+                  href="/sign-in"
+                  className="bg-white text-orange-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-orange-50 transition-colors duration-200 shadow-lg"
+                >
+                  Start Writing
+                </Link>
+                <Link
+                  href="/stories"
+                  className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white hover:text-orange-600 transition-colors duration-200"
+                >
+                  Explore Stories
+                </Link>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center">
+                <div className="flex items-center space-x-4 mb-6">
+                  {profileImageUrl && (
+                    <Image
+                      src={profileImageUrl}
+                      alt="User profile"
+                      width={60}
+                      height={60}
+                      className="rounded-full border-4 border-white shadow-lg"
+                    />
+                  )}
+                  <div className="text-left">
+                    <p className="text-2xl font-semibold">Welcome back, {user?.fullName || user?.username || 'Writer'}!</p>
+                    <p className="text-orange-100">Ready to share your next story?</p>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <Link
+                    href="/profile"
+                    className="bg-white text-orange-600 px-6 py-3 rounded-lg font-semibold hover:bg-orange-50 transition-colors duration-200"
+                  >
+                    My Profile
+                  </Link>
+                  <Link
+                    href="/stories"
+                    className="border-2 border-white text-white px-6 py-3 rounded-lg font-semibold hover:bg-white hover:text-orange-600 transition-colors duration-200"
+                  >
+                    Write New Story
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-12 bg-white dark:bg-gray-800">
+        <div className="w-full px-1">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+              <div>
+                <div className="text-3xl font-bold text-orange-600 mb-2">{filteredPosts.length}</div>
+                <div className="text-gray-600 dark:text-gray-400">Stories Published</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-orange-600 mb-2">
+                  {filteredPosts.reduce((sum, post) => sum + (post.views || 0), 0).toLocaleString()}
+                </div>
+                <div className="text-gray-600 dark:text-gray-400">Total Views</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-orange-600 mb-2">
+                  {filteredPosts.reduce((sum, post) => sum + (post.likes || 0), 0).toLocaleString()}
+                </div>
+                <div className="text-gray-600 dark:text-gray-400">Likes Received</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-orange-600 mb-2">
+                  {new Set(filteredPosts.map(post => post.author)).size}
+                </div>
+                <div className="text-gray-600 dark:text-gray-400">Active Writers</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Posts Section */}
+      <section className="py-16 bg-gray-50 dark:bg-slate-900">
+        <div className="w-full px-1">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                Featured Stories
+              </h2>
+              <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+                Discover the most engaging and popular stories from our community
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {currentPosts.slice(0, 6).map((post, index) => (
+                <article key={post.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
+                  <Link href={`/blog/${post.slug || post.id}`}>
+                    <div className="relative">
+                      {post.imageUrl ? (
+                        <Image
+                          src={post.imageUrl}
+                          alt={post.title}
+                          width={400}
+                          height={250}
+                          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-48 bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+                          <div className="text-center text-white">
+                            <h3 className="text-3xl font-bold mb-2">Blogme</h3>
+                            <p className="text-orange-100 text-sm">Your Story Awaits</p>
+                          </div>
+                        </div>
+                      )}
+                      <div className="absolute top-4 left-4">
+                        <span className="bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                          #{index + 1}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="p-6">
+                      <div className="flex items-center space-x-2 mb-3">
+                        {post.authorProfileImage ? (
+                          <Image
+                            src={post.authorProfileImage}
+                            alt={`${post.author}'s profile`}
+                            width={32}
+                            height={32}
+                            className="w-8 h-8 rounded-full"
+                          />
+                        ) : (
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+                            <span className="text-white font-bold text-sm">
+                              {post.author.charAt(0)}
+                            </span>
+                          </div>
+                        )}
+                        <span className="text-sm text-gray-600 dark:text-gray-400">{post.author}</span>
+                        <span className="text-gray-400">•</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          {post.createdAt.toDate().toLocaleDateString()}
+                        </span>
+                      </div>
+
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 line-clamp-2 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors duration-200">
+                        {post.title}
+                      </h3>
+
+                      <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-3" dangerouslySetInnerHTML={{
+                        __html: post.content.replace(/<[^>]*>/g, '').slice(0, 120) + '...'
+                      }}></p>
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+                          <span className="flex items-center">
+                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            {post.views || 0}
+                          </span>
+                          <span className="flex items-center">
+                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                            {post.likes || 0}
+                          </span>
+                          <span>{post.readingTime || 5} min read</span>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                </article>
+              ))}
+            </div>
+
+            {/* View All Button */}
+            <div className="text-center mt-12">
+              <Link
+                href="/stories"
+                className="inline-flex items-center bg-orange-600 hover:bg-orange-700 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-colors duration-200 shadow-lg"
+              >
+                View All Stories
+                <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Newsletter Section */}
+      <section className="py-16 bg-white dark:bg-gray-800">
+        <div className="w-full px-1">
+          <div className="max-w-4xl mx-auto">
+            <NewsletterForm />
+          </div>
+        </div>
+      </section>
+
+    </div>
   );
 };
 
-export default Home;
+export default Homepage;

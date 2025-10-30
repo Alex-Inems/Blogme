@@ -6,7 +6,6 @@ import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore
 import { db } from '@/lib/firebase';
 import Link from 'next/link';
 import Image from 'next/image';
-import PageNav from '@/components/PageNav';
 
 interface Post {
   id: string;
@@ -60,8 +59,7 @@ const StoriesPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
-      <PageNav />
-      <h1 className="text-2xl font-bold mb-4 mt-24">Your Stories</h1>
+      <h1 className="text-2xl font-bold mb-4 mt-8">Your Stories</h1>
 
       {posts.length === 0 ? (
         <p className="text-gray-500">You haven&apos;t written any stories yet.</p>

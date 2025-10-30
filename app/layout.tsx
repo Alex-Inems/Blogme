@@ -1,16 +1,23 @@
 import type { Metadata } from "next";
-import {  ClerkProvider} from '@clerk/nextjs';
+import { ClerkProvider } from '@clerk/nextjs';
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import TawkToWidget from '@/components/TawkToWidget';
-
-export const metadata: Metadata = {
-  title: "Blogme",
-  description: "You to the World",
-
-};
+import Navbar from '@/components/Navbar';
+import Footer from "@/components/Footer";
 import './globals.css'
 
-import Footer from "@/components/Footer";
+export const metadata: Metadata = {
+  title: "Blogme - You to the World",
+  description: "A platform for sharing your stories with the world. Connect, share your thoughts, and read amazing articles from writers around the globe.",
+  keywords: "blog, writing, stories, articles, community, platform",
+  authors: [{ name: "Blogme Team" }],
+  openGraph: {
+    title: "Blogme - You to the World",
+    description: "A platform for sharing your stories with the world",
+    type: "website",
+  },
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -18,20 +25,18 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-    {/* <head>
-    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
-    </head> */}
-        <body className="dark:bg-gray-950">
-
+      <body className="dark:bg-gray-950 bg-gray-50">
         <ClerkProvider>
-        <SpeedInsights/>
-        <TawkToWidget />
-          {children}
-          <Footer/> 
-    </ClerkProvider>
-        </body>
-       
-      </html>
+          <SpeedInsights />
+          <TawkToWidget />
+          <Navbar />
+          <main className="min-h-screen">
+            {children}
+          </main>
+          <Footer />
+        </ClerkProvider>
+      </body>
+    </html>
   )
 }
 

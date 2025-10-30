@@ -1,12 +1,7 @@
-import StoreUserProfile from '@/components/StoreUserProfile'
-
+import EnhancedProfile from '@/components/EnhancedProfile'
 
 const Profile = () => {
-  return (
-    <div className='bg-slate-950'>
-      <StoreUserProfile/>
-    </div>
-  )
+  return <EnhancedProfile />
 }
 
 export default Profile
