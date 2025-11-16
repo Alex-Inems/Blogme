@@ -68,7 +68,7 @@ const HelpCenterPage = () => {
                             <span className="text-orange-600 text-xl">💬</span>
                         </div>
                         <h3 className="text-lg font-semibold text-gray-900 mb-2">Contact Support</h3>
-                        <p className="text-gray-600 mb-4">Can't find what you're looking for? Get in touch with us</p>
+                        <p className="text-gray-600 mb-4">Can&apos;t find what you&apos;re looking for? Get in touch with us</p>
                         <Link href="/contact" className="text-orange-600 hover:text-orange-800 font-medium">
                             Contact Us →
                         </Link>

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import Image from 'next/image';
+import Link from 'next/link';
 
 interface Post {
     id: string;
@@ -12,7 +13,7 @@ interface Post {
     content: string;
     author: string;
     authorProfileImage: string;
-    createdAt: any;
+    createdAt: { toDate: () => Date };
     imageUrl: string;
     readingTime?: number;
     category?: string;

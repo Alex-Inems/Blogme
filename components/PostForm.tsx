@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { addDoc, collection } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { useUser } from '@clerk/nextjs';  // Clerk authentication
+import { useUser } from '@clerk/nextjs';
+import { toast } from 'sonner';
 
 const PostForm = () => {
   const [title, setTitle] = useState('');
@@ -15,7 +16,9 @@ const PostForm = () => {
     e.preventDefault();
 
     if (!user) {
-      alert("You need to be logged in to create a post.");
+      toast.info('Sign in required', {
+        description: 'You need to be logged in to create a post.',
+      });
       return;
     }
 

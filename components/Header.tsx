@@ -46,10 +46,10 @@ const Navbar = () => {
     }, [user]);
 
     return (
-        <nav className={`fixed top-0 left-0 right-0 dark:bg-slate-900 dark:text-white flex flexBetween py-2 w-full px-2 lg:px-10 lg:py-4 bg-white transition-shadow duration-300 ${isScrolled ? 'shadow-lg' : ''} z-50`}>
+        <nav className={`fixed top-0 left-0 right-0 dark:bg-zinc-900 dark:text-zinc-50 flex flexBetween py-2 w-full px-2 lg:px-10 lg:py-4 bg-white transition-shadow duration-300 ${isScrolled ? 'shadow-lg' : ''} z-50`}>
             <Link href="/home" className="flex items-center gap-1">
-                <p className="text-[26px] font-extrabold dark:text-white text-orange-950">
-                    Blog<span className='dark:text-orange-800 text-orange-950'>Me</span>
+                <p className="text-[26px] font-extrabold dark:text-zinc-50 text-orange-950">
+                    Blog<span className='dark:text-orange-400 text-orange-950'>Me</span>
                 </p>
             </Link>
             <div className="flex flexCenter gap-6 max-sm:hidden max-lg:flex">
@@ -80,13 +80,13 @@ const Navbar = () => {
             <DarkModeToggle />
             <div className="flex flexBetween gap-5">
                 <SignedOut>
-                
+
                     <SignInButton mode="modal">
                         <button className="hidden lg:block bg-orange-950 hover:bg-orange-800 text-white font-bold py-2 px-8 rounded-full shadow-md transition duration-300 ease-in-out whitespace-nowrap">
                             Sign In
                         </button>
                     </SignInButton>
-                    
+
                 </SignedOut>
 
                 <SignedIn>
@@ -99,7 +99,11 @@ const Navbar = () => {
                             className="rounded-full"
                         />
                     ) : (
-                        <div className="w-10 h-10 rounded-full bg-gray-300"></div> // Placeholder for loading
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+                            <span className="text-white font-bold text-sm">
+                                {user?.fullName?.charAt(0) || user?.username?.charAt(0) || 'U'}
+                            </span>
+                        </div>
                     )}
                     <Link
                         href="/profile"

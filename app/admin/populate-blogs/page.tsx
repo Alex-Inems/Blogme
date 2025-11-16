@@ -69,8 +69,8 @@ const PopulateBlogsPage = () => {
                         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
                             <h3 className="text-lg font-semibold text-yellow-800 mb-2">⚠️ Important Instructions</h3>
                             <p className="text-yellow-700 text-sm">
-                                <strong>Step 1:</strong> Click "Clear All Existing Blogs" first to remove old posts without author images<br />
-                                <strong>Step 2:</strong> Click "Add 100 Blogs with Author Images" to populate with new posts that have proper author profile pictures
+                                <strong>Step 1:</strong> Click &quot;Clear All Existing Blogs&quot; first to remove old posts without author images<br />
+                                <strong>Step 2:</strong> Click &quot;Add 100 Blogs with Author Images&quot; to populate with new posts that have proper author profile pictures
                             </p>
                         </div>
 

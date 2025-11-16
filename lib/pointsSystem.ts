@@ -1,5 +1,5 @@
 import { db } from './firebase';
-import { doc, updateDoc, getDoc, setDoc, increment, collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { doc, updateDoc, getDoc, setDoc, collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 
 export interface UserPoints {
     userId: string;
@@ -77,13 +77,15 @@ export const calculateLevel = (points: number): number => {
 
 export const getLevelInfo = (level: number) => {
     const levels = [
-        { name: 'Novice', color: 'text-blue-600', bgColor: 'bg-blue-100' },
-        { name: 'Explorer', color: 'text-green-600', bgColor: 'bg-green-100' },
-        { name: 'Scholar', color: 'text-orange-600', bgColor: 'bg-orange-100' },
-        { name: 'Expert', color: 'text-purple-600', bgColor: 'bg-purple-100' },
-        { name: 'Legend', color: 'text-yellow-600', bgColor: 'bg-yellow-100' }
+        { name: 'Novice', color: 'text-blue-600 dark:text-blue-400', bgColor: 'bg-blue-100 dark:bg-blue-900/30' },
+        { name: 'Explorer', color: 'text-green-600 dark:text-green-400', bgColor: 'bg-green-100 dark:bg-green-900/30' },
+        { name: 'Scholar', color: 'text-orange-600 dark:text-orange-400', bgColor: 'bg-orange-100 dark:bg-orange-900/30' },
+        { name: 'Expert', color: 'text-purple-600 dark:text-purple-400', bgColor: 'bg-purple-100 dark:bg-purple-900/30' },
+        { name: 'Legend', color: 'text-yellow-600 dark:text-yellow-400', bgColor: 'bg-yellow-100 dark:bg-yellow-900/30' }
     ];
-    return levels[level - 1] || levels[0];
+    // Ensure level is valid (1-5), default to 1 if invalid
+    const validLevel = (level >= 1 && level <= 5) ? level : 1;
+    return levels[validLevel - 1] || levels[0];
 };
 
 export const getNextMilestone = (points: number): Achievement | null => {
@@ -99,6 +101,7 @@ export const addPointsForReading = async (userId: string, postId: string, userna
     newLevel: number;
     newAchievements: Achievement[];
     isLevelUp: boolean;
+    alreadyRead: boolean;
 }> => {
     try {
         const userRef = doc(db, 'userPoints', userId);
@@ -107,12 +110,25 @@ export const addPointsForReading = async (userId: string, postId: string, userna
         let currentPoints = 0;
         let currentAchievements: string[] = [];
         let readCount = 0;
+        let readPosts: string[] = [];
 
         if (userDoc.exists()) {
             const data = userDoc.data();
             currentPoints = data.totalPoints || 0;
             currentAchievements = data.achievements || [];
             readCount = data.readCount || 0;
+            readPosts = data.readPosts || [];
+
+            // Check if user has already read this post
+            if (readPosts.includes(postId)) {
+                return {
+                    newPoints: currentPoints,
+                    newLevel: calculateLevel(currentPoints),
+                    newAchievements: [],
+                    isLevelUp: false,
+                    alreadyRead: true
+                };
+            }
         } else {
             // Create new user points document
             await setDoc(userRef, {
@@ -122,6 +138,7 @@ export const addPointsForReading = async (userId: string, postId: string, userna
                 level: 1,
                 achievements: [],
                 readCount: 0,
+                readPosts: [],
                 joinDate: new Date().toISOString(),
                 profileImageUrl
             });
@@ -144,6 +161,7 @@ export const addPointsForReading = async (userId: string, postId: string, userna
             level: newLevel,
             achievements: [...currentAchievements, ...newAchievements.map(a => a.id)],
             readCount: readCount + 1,
+            readPosts: [...readPosts, postId],
             lastReadPost: postId,
             username,
             profileImageUrl
@@ -153,7 +171,8 @@ export const addPointsForReading = async (userId: string, postId: string, userna
             newPoints,
             newLevel,
             newAchievements,
-            isLevelUp
+            isLevelUp,
+            alreadyRead: false
         };
     } catch (error) {
         console.error('Error adding points:', error);
@@ -192,5 +211,9 @@ export const getLeaderboard = async (limitCount: number = 10): Promise<UserPoint
 export const getAchievementById = (id: string): Achievement | undefined => {
     return ACHIEVEMENTS.find(achievement => achievement.id === id);
 };
+
+
+
+
 
 

@@ -3,6 +3,14 @@
 import { useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 
+interface Comment {
+    id: string;
+    author: string;
+    content: string;
+    authorImage?: string;
+    createdAt: { toDate: () => Date };
+}
+
 interface LikeCommentSectionProps {
     postId: string;
     initialLikes: number;
@@ -14,13 +22,15 @@ const LikeCommentSection = ({ postId, initialLikes, authorImage }: LikeCommentSe
     const [likes, setLikes] = useState(initialLikes);
     const [isLiked, setIsLiked] = useState(false);
     const [comment, setComment] = useState('');
-    const [comments, setComments] = useState<any[]>([]);
+    const [comments, setComments] = useState<Comment[]>([]);
     const [showComments, setShowComments] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleLike = async () => {
         if (!user) {
-            alert('Please sign in to like posts');
+            toast.info('Sign in required', {
+                description: 'Please sign in to like posts.',
+            });
             return;
         }
 
@@ -87,8 +97,8 @@ const LikeCommentSection = ({ postId, initialLikes, authorImage }: LikeCommentSe
                 <button
                     onClick={handleLike}
                     className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors duration-200 ${isLiked
-                            ? 'bg-orange-100 text-orange-600 border border-orange-200'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        ? 'bg-orange-100 text-orange-600 border border-orange-200'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                         }`}
                 >
                     <svg className="w-5 h-5" fill={isLiked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">

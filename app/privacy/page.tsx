@@ -15,7 +15,7 @@ const PrivacyPolicyPage = () => {
                         <section className="mb-8">
                             <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Introduction</h2>
                             <p className="text-gray-700 mb-4">
-                                Welcome to Blogme ("we," "our," or "us"). This Privacy Policy explains how we collect,
+                                Welcome to Blogme (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;). This Privacy Policy explains how we collect,
                                 use, disclose, and safeguard your information when you visit our website and use our
                                 services. Please read this privacy policy carefully. If you do not agree with the terms
                                 of this privacy policy, please do not access the site.
@@ -127,7 +127,7 @@ const PrivacyPolicyPage = () => {
                         </section>
 
                         <section className="mb-8">
-                            <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Children's Privacy</h2>
+                            <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Children&apos;s Privacy</h2>
                             <p className="text-gray-700 mb-4">
                                 Our services are not intended for children under 13 years of age. We do not knowingly
                                 collect personal information from children under 13. If you are a parent or guardian and
@@ -139,7 +139,7 @@ const PrivacyPolicyPage = () => {
                             <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Changes to This Privacy Policy</h2>
                             <p className="text-gray-700 mb-4">
                                 We may update this Privacy Policy from time to time. We will notify you of any changes
-                                by posting the new Privacy Policy on this page and updating the "Last updated" date.
+                                by posting the new Privacy Policy on this page and updating the &quot;Last updated&quot; date.
                                 You are advised to review this Privacy Policy periodically for any changes.
                             </p>
                         </section>

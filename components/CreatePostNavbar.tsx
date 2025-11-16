@@ -65,7 +65,9 @@ const CreatePostNavbar = ({ onSubmit }: CreatePostNavbarProps) => {
       <div className="flex items-center gap-5">
         <SignedIn>
           {isLoading ? (
-            <div className="w-10 h-10 rounded-full bg-gray-300 animate-pulse"></div> // Loading placeholder
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 animate-pulse flex items-center justify-center">
+              <span className="text-white font-bold text-sm opacity-50">...</span>
+            </div>
           ) : profileImageUrl ? (
             <Image
               src={profileImageUrl}
@@ -75,7 +77,11 @@ const CreatePostNavbar = ({ onSubmit }: CreatePostNavbarProps) => {
               className="rounded-full"
             />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-gray-300"></div> // Placeholder if no image
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+              <span className="text-white font-bold text-sm">
+                {user?.fullName?.charAt(0) || user?.username?.charAt(0) || 'U'}
+              </span>
+            </div>
           )}
         </SignedIn>
 

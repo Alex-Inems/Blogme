@@ -88,7 +88,7 @@ const AboutPage = () => {
                             <h3 className="text-xl font-semibold text-gray-900 mb-2">Emily Rodriguez</h3>
                             <p className="text-gray-600 mb-2">Head of Community</p>
                             <p className="text-sm text-gray-500">
-                                Dedicated to fostering inclusive communities and supporting our users' creative journeys.
+                                Dedicated to fostering inclusive communities and supporting our users&apos; creative journeys.
                             </p>
                         </div>
                     </div>

@@ -1,0 +1,81 @@
+import { NextResponse } from 'next/server';
+import { db } from '@/lib/firebase';
+import { collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore';
+
+export async function GET() {
+    try {
+        const postsRef = collection(db, 'posts');
+        const q = query(
+            postsRef,
+            where('published', '!=', false),
+            orderBy('createdAt', 'desc'),
+            limit(50)
+        );
+        const querySnapshot = await getDocs(q);
+
+        const posts = querySnapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                title: data.title || 'Untitled',
+                content: data.content || '',
+                author: data.author || 'Anonymous',
+                createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(),
+                slug: data.slug || doc.id,
+                category: data.category || '',
+                imageUrl: data.imageUrl || '',
+            };
+        });
+
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://blogme.africa';
+        const siteName = 'Blogme';
+        const siteDescription = 'A platform for sharing your stories with the world';
+
+        const rss = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>${siteName}</title>
+    <link>${baseUrl}</link>
+    <description>${siteDescription}</description>
+    <language>en-us</language>
+    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+    <atom:link href="${baseUrl}/rss.xml" rel="self" type="application/rss+xml"/>
+    ${posts.map(post => {
+            const postUrl = `${baseUrl}/blog/${post.slug}`;
+            const pubDate = post.createdAt.toUTCString();
+            const description = post.content
+                .replace(/<[^>]*>/g, '') // Remove HTML tags
+                .substring(0, 300)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&apos;');
+
+            return `
+    <item>
+      <title><![CDATA[${post.title}]]></title>
+      <link>${postUrl}</link>
+      <guid isPermaLink="true">${postUrl}</guid>
+      <description><![CDATA[${description}...]]></description>
+      <author>${post.author}</author>
+      <category>${post.category || 'General'}</category>
+      <pubDate>${pubDate}</pubDate>
+      ${post.imageUrl ? `<enclosure url="${post.imageUrl}" type="image/jpeg"/>` : ''}
+    </item>`;
+        }).join('')}
+  </channel>
+</rss>`;
+
+        return new NextResponse(rss, {
+            headers: {
+                'Content-Type': 'application/rss+xml; charset=utf-8',
+                'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+            },
+        });
+    } catch (error) {
+        console.error('Error generating RSS feed:', error);
+        return new NextResponse('Error generating RSS feed', { status: 500 });
+    }
+}
+

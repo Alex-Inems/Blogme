@@ -24,13 +24,33 @@ const ContactPage = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
+        setSubmitStatus('idle');
 
-        // Simulate form submission
         try {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            setSubmitStatus('success');
-            setFormData({ name: '', email: '', subject: '', message: '' });
+            const response = await fetch('/api/send-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setSubmitStatus('success');
+                setFormData({ name: '', email: '', subject: '', message: '' });
+                toast.success('Message sent!', {
+                    description: 'We\'ll get back to you as soon as possible.',
+                });
+            } else {
+                setSubmitStatus('error');
+                toast.error('Failed to send message', {
+                    description: data.error || 'Please try again later.',
+                });
+            }
         } catch (error) {
+            console.error('Error submitting form:', error);
             setSubmitStatus('error');
         } finally {
             setIsSubmitting(false);
@@ -57,27 +77,48 @@ const ContactPage = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
-            {/* Hero Section */}
-            <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white py-20">
-                <div className="max-w-6xl mx-auto px-4">
+        <div className="min-h-screen bg-gray-50 dark:bg-zinc-950">
+            {/* Hero Section with Wallpaper */}
+            <div className="relative py-20 md:py-32 overflow-hidden">
+                {/* Wallpaper Background */}
+                <div
+                    className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                    style={{
+                        backgroundImage: 'url(https://images.unsplash.com/photo-1455390582262-044cdead277a?w=1920&q=80&auto=format&fit=crop)',
+                    }}
+                >
+                    {/* Gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/60 to-black/70 dark:from-black/80 dark:via-black/70 dark:to-black/80"></div>
+
+                    {/* Decorative elements */}
+                    <div className="absolute top-20 left-20 w-72 h-72 bg-orange-500/10 rounded-full blur-3xl"></div>
+                    <div className="absolute bottom-20 right-20 w-96 h-96 bg-orange-600/10 rounded-full blur-3xl"></div>
+                </div>
+
+                {/* Hero Content */}
+                <div className="relative z-10 max-w-6xl mx-auto px-4">
                     <div className="text-center">
-                        <h1 className="text-4xl md:text-6xl font-bold mb-6">
+                        <div className="inline-block mb-6">
+                            <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center mx-auto shadow-lg">
+                                <FiMessageCircle className="w-10 h-10 text-white" />
+                            </div>
+                        </div>
+                        <h1 className="text-4xl md:text-6xl font-bold mb-6 text-white">
                             Get in Touch
                         </h1>
                         <p className="text-xl md:text-2xl text-orange-100 max-w-3xl mx-auto mb-8">
-                            Have a question, suggestion, or just want to say hello? We'd love to hear from you!
+                            Have a question, suggestion, or just want to say hello? We&apos;d love to hear from you!
                         </p>
-                        <div className="flex justify-center space-x-8 text-orange-100">
-                            <div className="flex items-center space-x-2">
+                        <div className="flex flex-wrap justify-center gap-6 md:gap-8 text-orange-100">
+                            <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
                                 <FiClock className="w-5 h-5" />
                                 <span>24/7 Support</span>
                             </div>
-                            <div className="flex items-center space-x-2">
+                            <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
                                 <FiUsers className="w-5 h-5" />
                                 <span>Community Driven</span>
                             </div>
-                            <div className="flex items-center space-x-2">
+                            <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
                                 <FiHeart className="w-5 h-5" />
                                 <span>Made with Love</span>
                             </div>
@@ -86,21 +127,21 @@ const ContactPage = () => {
                 </div>
             </div>
 
-            <div className="max-w-6xl mx-auto px-4 py-16">
-                <div className="grid lg:grid-cols-2 gap-12">
+            <div className="max-w-6xl mx-auto px-4 py-16 -mt-10 relative z-10">
+                <div className="grid lg:grid-cols-2 gap-8">
                     {/* Contact Form */}
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+                    <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl p-8 border border-gray-100 dark:border-zinc-800">
                         <div className="flex items-center space-x-3 mb-8">
-                            <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900 rounded-xl flex items-center justify-center">
+                            <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center">
                                 <FiMessageCircle className="w-6 h-6 text-orange-600 dark:text-orange-400" />
                             </div>
-                            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Send us a Message</h2>
+                            <h2 className="text-3xl font-bold text-gray-900 dark:text-zinc-50">Send us a Message</h2>
                         </div>
 
                         {submitStatus === 'success' && (
                             <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200 px-6 py-4 rounded-xl mb-6 flex items-center space-x-3">
                                 <FiCheckCircle className="w-5 h-5" />
-                                <span>Thank you for your message! We'll get back to you soon.</span>
+                                <span>Thank you for your message! We&apos;ll get back to you soon.</span>
                             </div>
                         )}
 
@@ -114,7 +155,7 @@ const ContactPage = () => {
                         <form onSubmit={handleSubmit} className="space-y-6">
                             <div className="grid md:grid-cols-2 gap-6">
                                 <div>
-                                    <label htmlFor="name" className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                    <label htmlFor="name" className="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-2">
                                         Full Name *
                                     </label>
                                     <input
@@ -124,7 +165,7 @@ const ContactPage = () => {
                                         value={formData.name}
                                         onChange={handleChange}
                                         required
-                                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors"
+                                        className="w-full px-4 py-3 border border-gray-300 dark:border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-50 transition-colors"
                                         placeholder="Enter your full name"
                                     />
                                 </div>
@@ -140,7 +181,7 @@ const ContactPage = () => {
                                         value={formData.email}
                                         onChange={handleChange}
                                         required
-                                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors"
+                                        className="w-full px-4 py-3 border border-gray-300 dark:border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-50 transition-colors"
                                         placeholder="Enter your email"
                                     />
                                 </div>
@@ -173,7 +214,7 @@ const ContactPage = () => {
                                     onChange={handleChange}
                                     required
                                     rows={6}
-                                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-colors resize-none"
+                                    className="w-full px-4 py-3 border border-gray-300 dark:border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-50 transition-colors resize-none"
                                     placeholder="Tell us what's on your mind..."
                                 />
                             </div>
@@ -192,66 +233,66 @@ const ContactPage = () => {
                     {/* Contact Information & FAQ */}
                     <div className="space-y-8">
                         {/* Contact Details */}
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+                        <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl p-8 border border-gray-100 dark:border-zinc-800">
                             <div className="flex items-center space-x-3 mb-8">
-                                <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900 rounded-xl flex items-center justify-center">
+                                <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center">
                                     <FiMail className="w-6 h-6 text-orange-600 dark:text-orange-400" />
                                 </div>
-                                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Contact Information</h2>
+                                <h2 className="text-3xl font-bold text-gray-900 dark:text-zinc-50">Contact Information</h2>
                             </div>
 
                             <div className="space-y-6">
-                                <div className="flex items-start space-x-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
-                                    <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <div className="flex items-start space-x-4 p-4 bg-gray-50 dark:bg-zinc-800 rounded-xl hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors">
+                                    <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center flex-shrink-0">
                                         <FiMail className="w-6 h-6 text-orange-600 dark:text-orange-400" />
                                     </div>
                                     <div>
-                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Email</h3>
-                                        <p className="text-gray-600 dark:text-gray-300 font-medium">{COMPANY_INFO.email}</p>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">We'll respond within 24 hours</p>
+                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-zinc-50 mb-1">Email</h3>
+                                        <p className="text-gray-600 dark:text-zinc-300 font-medium">{COMPANY_INFO.email}</p>
+                                        <p className="text-sm text-gray-500 dark:text-zinc-400">We&apos;ll respond within 24 hours</p>
                                     </div>
                                 </div>
 
-                                <div className="flex items-start space-x-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
-                                    <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <div className="flex items-start space-x-4 p-4 bg-gray-50 dark:bg-zinc-800 rounded-xl hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors">
+                                    <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center flex-shrink-0">
                                         <FiPhone className="w-6 h-6 text-orange-600 dark:text-orange-400" />
                                     </div>
                                     <div>
-                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Phone</h3>
-                                        <p className="text-gray-600 dark:text-gray-300 font-medium">{COMPANY_INFO.phone}</p>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Mon-Fri 9AM-6PM EST</p>
+                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-zinc-50 mb-1">Phone</h3>
+                                        <p className="text-gray-600 dark:text-zinc-300 font-medium">{COMPANY_INFO.phone}</p>
+                                        <p className="text-sm text-gray-500 dark:text-zinc-400">Mon-Fri 9AM-6PM EST</p>
                                     </div>
                                 </div>
 
-                                <div className="flex items-start space-x-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-xl">
-                                    <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <div className="flex items-start space-x-4 p-4 bg-gray-50 dark:bg-zinc-800 rounded-xl hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors">
+                                    <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center flex-shrink-0">
                                         <FiMapPin className="w-6 h-6 text-orange-600 dark:text-orange-400" />
                                     </div>
                                     <div>
-                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Address</h3>
-                                        <p className="text-gray-600 dark:text-gray-300 font-medium">{COMPANY_INFO.address}</p>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">Visit us anytime</p>
+                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-zinc-50 mb-1">Address</h3>
+                                        <p className="text-gray-600 dark:text-zinc-300 font-medium">{COMPANY_INFO.address}</p>
+                                        <p className="text-sm text-gray-500 dark:text-zinc-400">Visit us anytime</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         {/* FAQ Section */}
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+                        <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl p-8 border border-gray-100 dark:border-zinc-800">
                             <div className="flex items-center space-x-3 mb-8">
-                                <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900 rounded-xl flex items-center justify-center">
+                                <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center">
                                     <FiStar className="w-6 h-6 text-orange-600 dark:text-orange-400" />
                                 </div>
-                                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Frequently Asked Questions</h2>
+                                <h2 className="text-3xl font-bold text-gray-900 dark:text-zinc-50">Frequently Asked Questions</h2>
                             </div>
 
                             <div className="space-y-6">
                                 {faqs.map((faq, index) => (
-                                    <div key={index} className="border-l-4 border-orange-500 pl-6">
-                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                                    <div key={index} className="border-l-4 border-orange-500 pl-6 hover:bg-gray-50 dark:hover:bg-zinc-800 p-4 rounded-r-xl transition-colors">
+                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-zinc-50 mb-2">
                                             {faq.question}
                                         </h3>
-                                        <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                                        <p className="text-gray-600 dark:text-zinc-300 leading-relaxed">
                                             {faq.answer}
                                         </p>
                                     </div>
@@ -260,15 +301,15 @@ const ContactPage = () => {
                         </div>
 
                         {/* Social Media */}
-                        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+                        <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-xl p-8 border border-gray-100 dark:border-zinc-800">
                             <div className="flex items-center space-x-3 mb-6">
-                                <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900 rounded-xl flex items-center justify-center">
+                                <div className="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center">
                                     <FiUsers className="w-6 h-6 text-orange-600 dark:text-orange-400" />
                                 </div>
-                                <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Follow Us</h2>
+                                <h2 className="text-3xl font-bold text-gray-900 dark:text-zinc-50">Follow Us</h2>
                             </div>
 
-                            <p className="text-gray-600 dark:text-gray-300 mb-6">
+                            <p className="text-gray-600 dark:text-zinc-300 mb-6">
                                 Stay connected and get the latest updates from our community.
                             </p>
 
@@ -279,14 +320,14 @@ const ContactPage = () => {
                                         href={social.url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="flex items-center space-x-3 p-4 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors group"
+                                        className="flex items-center space-x-3 p-4 bg-gray-50 dark:bg-zinc-800 rounded-xl hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-all duration-200 group hover:scale-105"
                                     >
-                                        <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900 rounded-lg flex items-center justify-center group-hover:bg-orange-200 dark:group-hover:bg-orange-800 transition-colors">
+                                        <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center group-hover:bg-orange-200 dark:group-hover:bg-orange-800 transition-colors">
                                             <span className="text-orange-600 dark:text-orange-400 font-semibold text-sm">
                                                 {social.name.charAt(0)}
                                             </span>
                                         </div>
-                                        <span className="text-gray-700 dark:text-gray-300 font-medium group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
+                                        <span className="text-gray-700 dark:text-zinc-300 font-medium group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
                                             {social.name}
                                         </span>
                                     </a>

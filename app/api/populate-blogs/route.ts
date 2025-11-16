@@ -5,140 +5,140 @@ import { slugify } from '@/lib/slugify';
 
 // Categories and their corresponding topics
 const categories = {
-    tech: [
-        "Artificial Intelligence", "Machine Learning", "Web Development", "Mobile Apps",
-        "Cybersecurity", "Cloud Computing", "Data Science", "Blockchain", "IoT", "DevOps",
-        "Software Engineering", "UI/UX Design", "Database Management", "API Development", "System Architecture"
-    ],
-    health: [
-        "Mental Health", "Nutrition", "Fitness", "Medical Research", "Wellness",
-        "Alternative Medicine", "Public Health", "Disease Prevention", "Mental Wellness", "Healthy Living",
-        "Chronic Disease Management", "Preventive Care", "Health Technology", "Medical Innovation", "Wellness Trends"
-    ],
-    politics: [
-        "Election Analysis", "Policy Review", "International Relations", "Economic Policy",
-        "Social Justice", "Environmental Policy", "Healthcare Policy", "Education Reform", "Immigration", "Democracy",
-        "Political Reform", "Global Governance", "Public Administration", "Civic Engagement", "Policy Implementation"
-    ],
-    business: [
-        "Entrepreneurship", "Startup Culture", "Marketing Strategies", "Financial Planning",
-        "Leadership", "Innovation", "Market Analysis", "Investment", "Management", "E-commerce",
-        "Digital Transformation", "Business Strategy", "Customer Experience", "Supply Chain", "Business Analytics"
-    ],
-    lifestyle: [
-        "Travel", "Fashion", "Home Decor", "Cooking", "Parenting", "Relationships",
-        "Personal Development", "Hobbies", "Entertainment", "Culture",
-        "Sustainable Living", "Work-Life Balance", "Creative Arts", "Social Media", "Digital Wellness"
-    ],
-    science: [
-        "Space Exploration", "Climate Change", "Biology", "Physics", "Chemistry",
-        "Environmental Science", "Research", "Innovation", "Discovery", "Technology",
-        "Renewable Energy", "Biotechnology", "Neuroscience", "Materials Science", "Scientific Method"
-    ],
-    education: [
-        "Learning Methods", "Online Education", "Career Development", "Skill Building",
-        "Academic Research", "Teaching", "Student Life", "Educational Technology", "Lifelong Learning", "Knowledge",
-        "Critical Thinking", "Digital Literacy", "Educational Policy", "Learning Analytics", "Educational Innovation"
-    ]
+  tech: [
+    "Artificial Intelligence", "Machine Learning", "Web Development", "Mobile Apps",
+    "Cybersecurity", "Cloud Computing", "Data Science", "Blockchain", "IoT", "DevOps",
+    "Software Engineering", "UI/UX Design", "Database Management", "API Development", "System Architecture"
+  ],
+  health: [
+    "Mental Health", "Nutrition", "Fitness", "Medical Research", "Wellness",
+    "Alternative Medicine", "Public Health", "Disease Prevention", "Mental Wellness", "Healthy Living",
+    "Chronic Disease Management", "Preventive Care", "Health Technology", "Medical Innovation", "Wellness Trends"
+  ],
+  politics: [
+    "Election Analysis", "Policy Review", "International Relations", "Economic Policy",
+    "Social Justice", "Environmental Policy", "Healthcare Policy", "Education Reform", "Immigration", "Democracy",
+    "Political Reform", "Global Governance", "Public Administration", "Civic Engagement", "Policy Implementation"
+  ],
+  business: [
+    "Entrepreneurship", "Startup Culture", "Marketing Strategies", "Financial Planning",
+    "Leadership", "Innovation", "Market Analysis", "Investment", "Management", "E-commerce",
+    "Digital Transformation", "Business Strategy", "Customer Experience", "Supply Chain", "Business Analytics"
+  ],
+  lifestyle: [
+    "Travel", "Fashion", "Home Decor", "Cooking", "Parenting", "Relationships",
+    "Personal Development", "Hobbies", "Entertainment", "Culture",
+    "Sustainable Living", "Work-Life Balance", "Creative Arts", "Social Media", "Digital Wellness"
+  ],
+  science: [
+    "Space Exploration", "Climate Change", "Biology", "Physics", "Chemistry",
+    "Environmental Science", "Research", "Innovation", "Discovery", "Technology",
+    "Renewable Energy", "Biotechnology", "Neuroscience", "Materials Science", "Scientific Method"
+  ],
+  education: [
+    "Learning Methods", "Online Education", "Career Development", "Skill Building",
+    "Academic Research", "Teaching", "Student Life", "Educational Technology", "Lifelong Learning", "Knowledge",
+    "Critical Thinking", "Digital Literacy", "Educational Policy", "Learning Analytics", "Educational Innovation"
+  ]
 };
 
 // Sample authors with their profile images
 const authors = [
-    { name: "Sarah Johnson", image: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face" },
-    { name: "Michael Chen", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" },
-    { name: "Emily Rodriguez", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face" },
-    { name: "David Thompson", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" },
-    { name: "Lisa Wang", image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face" },
-    { name: "James Wilson", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face" },
-    { name: "Maria Garcia", image: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=100&h=100&fit=crop&crop=face" },
-    { name: "Alex Kim", image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&crop=face" },
-    { name: "Rachel Brown", image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=face" },
-    { name: "Tom Anderson", image: "https://images.unsplash.com/photo-1507591064344-4c6ce005b128?w=100&h=100&fit=crop&crop=face" },
-    { name: "Jessica Lee", image: "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=100&h=100&fit=crop&crop=face" },
-    { name: "Chris Taylor", image: "https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=100&h=100&fit=crop&crop=face" },
-    { name: "Amanda White", image: "https://images.unsplash.com/photo-1531123897727-8f062e26e5d2?w=100&h=100&fit=crop&crop=face" },
-    { name: "Ryan Davis", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" },
-    { name: "Nicole Martinez", image: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=100&h=100&fit=crop&crop=face" },
-    { name: "Dr. Jennifer Smith", image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face" },
-    { name: "Prof. Robert Johnson", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" },
-    { name: "Dr. Maria Santos", image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&crop=face" },
-    { name: "Alex Thompson", image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&crop=face" },
-    { name: "Sarah Williams", image: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face" }
+  { name: "Sarah Johnson", image: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face" },
+  { name: "Michael Chen", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" },
+  { name: "Emily Rodriguez", image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face" },
+  { name: "David Thompson", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" },
+  { name: "Lisa Wang", image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face" },
+  { name: "James Wilson", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face" },
+  { name: "Maria Garcia", image: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=100&h=100&fit=crop&crop=face" },
+  { name: "Alex Kim", image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&crop=face" },
+  { name: "Rachel Brown", image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=face" },
+  { name: "Tom Anderson", image: "https://images.unsplash.com/photo-1507591064344-4c6ce005b128?w=100&h=100&fit=crop&crop=face" },
+  { name: "Jessica Lee", image: "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=100&h=100&fit=crop&crop=face" },
+  { name: "Chris Taylor", image: "https://images.unsplash.com/photo-1519345182560-3f2917c472ef?w=100&h=100&fit=crop&crop=face" },
+  { name: "Amanda White", image: "https://images.unsplash.com/photo-1531123897727-8f062e26e5d2?w=100&h=100&fit=crop&crop=face" },
+  { name: "Ryan Davis", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face" },
+  { name: "Nicole Martinez", image: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=100&h=100&fit=crop&crop=face" },
+  { name: "Dr. Jennifer Smith", image: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face" },
+  { name: "Prof. Robert Johnson", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face" },
+  { name: "Dr. Maria Santos", image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&crop=face" },
+  { name: "Alex Thompson", image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&crop=face" },
+  { name: "Sarah Williams", image: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face" }
 ];
 
 // Generate topic-specific images using Unsplash API with search terms
 const getTopicImages = (topic: string, category: string, index: number) => {
-    // Create search terms based on the specific topic
-    const searchTerms = topic.toLowerCase().replace(/\s+/g, '-');
+  // Create search terms based on the specific topic
+  // const searchTerms = topic.toLowerCase().replace(/\s+/g, '-'); // Reserved for future use
 
-    // Generate unique image URLs for each topic
-    const baseUrl = "https://images.unsplash.com/photo-";
-    const imageIds = [
-        "1518709268805-4e9042af2176", "1485827404703-89b55fcc595e", "1516321318423-f06f85b504d3",
-        "1555066931-4365d14bab8c", "1461749280684-dccba630e2f6", "1507003211169-0a1dd7228f2d",
-        "1559757148-5c350d0d3c56", "1571019613454-1cb2f99b2d8b", "1559757175-0eb30cd8c063",
-        "1529107386315-e1a2ed48a620", "1441986300917-64674bd600d8", "1446776877081-d282a0f896e2",
-        "1503676260728-1c00da094a0b", "1494790108755-2616b612b786", "1472099645785-5658abf4ff4e",
-        "1544005313-94ddf0286df2", "1500648767791-00dcc994a43e", "1487412720507-e7ab37603c6f",
-        "1506794778202-cad84cf45f1d", "1534528741775-53994a69daeb", "1507591064344-4c6ce005b128",
-        "1488426862026-3ee34a7d66df", "1519345182560-3f2917c472ef", "1531123897727-8f062e26e5d2",
-        "1559839734-2b71ea197ec2", "1580489944761-15a19d654956", "1518709268805-4e9042af2176",
-        "1485827404703-89b55fcc595e", "1516321318423-f06f85b504d3", "1555066931-4365d14bab8c"
-    ];
+  // Generate unique image URLs for each topic
+  const baseUrl = "https://images.unsplash.com/photo-";
+  const imageIds = [
+    "1518709268805-4e9042af2176", "1485827404703-89b55fcc595e", "1516321318423-f06f85b504d3",
+    "1555066931-4365d14bab8c", "1461749280684-dccba630e2f6", "1507003211169-0a1dd7228f2d",
+    "1559757148-5c350d0d3c56", "1571019613454-1cb2f99b2d8b", "1559757175-0eb30cd8c063",
+    "1529107386315-e1a2ed48a620", "1441986300917-64674bd600d8", "1446776877081-d282a0f896e2",
+    "1503676260728-1c00da094a0b", "1494790108755-2616b612b786", "1472099645785-5658abf4ff4e",
+    "1544005313-94ddf0286df2", "1500648767791-00dcc994a43e", "1487412720507-e7ab37603c6f",
+    "1506794778202-cad84cf45f1d", "1534528741775-53994a69daeb", "1507591064344-4c6ce005b128",
+    "1488426862026-3ee34a7d66df", "1519345182560-3f2917c472ef", "1531123897727-8f062e26e5d2",
+    "1559839734-2b71ea197ec2", "1580489944761-15a19d654956", "1518709268805-4e9042af2176",
+    "1485827404703-89b55fcc595e", "1516321318423-f06f85b504d3", "1555066931-4365d14bab8c"
+  ];
 
-    // Use topic and index to create unique image selection
-    const imageIndex = (topic.length + index) % imageIds.length;
-    const imageId = imageIds[imageIndex];
+  // Use topic and index to create unique image selection
+  const imageIndex = (topic.length + index) % imageIds.length;
+  const imageId = imageIds[imageIndex];
 
-    return `${baseUrl}${imageId}?w=800&h=400&fit=crop&q=80&auto=format`;
+  return `${baseUrl}${imageId}?w=800&h=400&fit=crop&q=80&auto=format`;
 };
 
 // Get multiple unique images for a topic
 const getTopicImageSet = (topic: string, category: string) => {
-    return [
-        getTopicImages(topic, category, 0),
-        getTopicImages(topic, category, 1),
-        getTopicImages(topic, category, 2),
-        getTopicImages(topic, category, 3),
-        getTopicImages(topic, category, 4)
-    ];
+  return [
+    getTopicImages(topic, category, 0),
+    getTopicImages(topic, category, 1),
+    getTopicImages(topic, category, 2),
+    getTopicImages(topic, category, 3),
+    getTopicImages(topic, category, 4)
+  ];
 };
 
 // Generate unique, comprehensive blog content (2000+ words)
 const generateBlogContent = (title: string, category: string, topic: string, index: number) => {
-    // Create unique variations for each blog
-    const variations = {
-        intro: [
-            `In today's rapidly evolving landscape of ${category}, ${topic.toLowerCase()} has emerged as a transformative force reshaping how we approach complex challenges.`,
-            `The field of ${category} continues to witness remarkable innovations, with ${topic.toLowerCase()} standing at the forefront of this technological revolution.`,
-            `As we navigate the complexities of modern ${category}, ${topic.toLowerCase()} presents unprecedented opportunities for growth and innovation.`,
-            `The intersection of ${category} and ${topic.toLowerCase()} represents one of the most exciting developments in contemporary technology.`,
-            `In an era defined by rapid technological advancement, ${topic.toLowerCase()} has become a cornerstone of ${category} innovation.`
-        ],
-        challenges: [
-            "One of the most significant challenges facing this field is the need for scalable solutions that can adapt to changing requirements.",
-            "The complexity of modern systems presents unique challenges that require innovative approaches and creative problem-solving.",
-            "As the field continues to evolve, practitioners must navigate an increasingly complex landscape of technical and ethical considerations.",
-            "The rapid pace of innovation brings both opportunities and challenges that require careful consideration and strategic planning.",
-            "Balancing innovation with practicality remains one of the most pressing challenges in this rapidly evolving field."
-        ],
-        future: [
-            "Looking ahead, we can expect to see continued innovation and refinement of existing methodologies.",
-            "The future holds tremendous promise for those willing to embrace new technologies and approaches.",
-            "As we move forward, the focus will increasingly shift toward sustainable and ethical implementation strategies.",
-            "The next decade promises to bring about revolutionary changes that will reshape the entire landscape.",
-            "Emerging trends suggest that we are on the cusp of a major paradigm shift in how we approach these challenges."
-        ]
-    };
+  // Create unique variations for each blog
+  const variations = {
+    intro: [
+      `In today's rapidly evolving landscape of ${category}, ${topic.toLowerCase()} has emerged as a transformative force reshaping how we approach complex challenges.`,
+      `The field of ${category} continues to witness remarkable innovations, with ${topic.toLowerCase()} standing at the forefront of this technological revolution.`,
+      `As we navigate the complexities of modern ${category}, ${topic.toLowerCase()} presents unprecedented opportunities for growth and innovation.`,
+      `The intersection of ${category} and ${topic.toLowerCase()} represents one of the most exciting developments in contemporary technology.`,
+      `In an era defined by rapid technological advancement, ${topic.toLowerCase()} has become a cornerstone of ${category} innovation.`
+    ],
+    challenges: [
+      "One of the most significant challenges facing this field is the need for scalable solutions that can adapt to changing requirements.",
+      "The complexity of modern systems presents unique challenges that require innovative approaches and creative problem-solving.",
+      "As the field continues to evolve, practitioners must navigate an increasingly complex landscape of technical and ethical considerations.",
+      "The rapid pace of innovation brings both opportunities and challenges that require careful consideration and strategic planning.",
+      "Balancing innovation with practicality remains one of the most pressing challenges in this rapidly evolving field."
+    ],
+    future: [
+      "Looking ahead, we can expect to see continued innovation and refinement of existing methodologies.",
+      "The future holds tremendous promise for those willing to embrace new technologies and approaches.",
+      "As we move forward, the focus will increasingly shift toward sustainable and ethical implementation strategies.",
+      "The next decade promises to bring about revolutionary changes that will reshape the entire landscape.",
+      "Emerging trends suggest that we are on the cusp of a major paradigm shift in how we approach these challenges."
+    ]
+  };
 
-    const intro = variations.intro[index % variations.intro.length];
-    const challenge = variations.challenges[index % variations.challenges.length];
-    const future = variations.future[index % variations.future.length];
+  const intro = variations.intro[index % variations.intro.length];
+  const challenge = variations.challenges[index % variations.challenges.length];
+  const future = variations.future[index % variations.future.length];
 
-    // Get unique images for this specific topic
-    const topicImages = getTopicImageSet(topic, category);
+  // Get unique images for this specific topic
+  const topicImages = getTopicImageSet(topic, category);
 
-    const content = `
+  const content = `
 <div class="blog-content">
   <h1>${title}</h1>
   
@@ -305,91 +305,92 @@ const generateBlogContent = (title: string, category: string, topic: string, ind
 </style>
   `;
 
-    return content;
+  return content;
 };
 
-export async function POST(request: NextRequest) {
-    try {
-        const blogs = [];
-        let blogCount = 0;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function POST(_request: NextRequest) {
+  try {
+    const blogs = [];
+    let blogCount = 0;
 
-        // Generate blogs for each category
-        for (const [category, topics] of Object.entries(categories)) {
-            for (let i = 0; i < 15; i++) { // 15 blogs per category = 105 total
-                if (blogCount >= 100) break;
+    // Generate blogs for each category
+    for (const [category, topics] of Object.entries(categories)) {
+      for (let i = 0; i < 15; i++) { // 15 blogs per category = 105 total
+        if (blogCount >= 100) break;
 
-                const topic = topics[i % topics.length];
-                const authorData = authors[Math.floor(Math.random() * authors.length)];
+        const topic = topics[i % topics.length];
+        const authorData = authors[Math.floor(Math.random() * authors.length)];
 
-                // Create unique titles for each blog
-                const titleVariations = [
-                    `${topic}: A Comprehensive Guide to Understanding Modern Trends and Future Implications`,
-                    `The Complete Guide to ${topic}: Strategies, Implementation, and Best Practices`,
-                    `${topic} Explained: From Fundamentals to Advanced Applications`,
-                    `Mastering ${topic}: A Deep Dive into Modern Techniques and Methodologies`,
-                    `The Future of ${topic}: Emerging Trends and Revolutionary Approaches`,
-                    `${topic} in Practice: Real-World Applications and Success Stories`,
-                    `Understanding ${topic}: A Professional's Guide to Implementation`,
-                    `${topic} Revolution: How Technology is Transforming the Industry`,
-                    `Advanced ${topic}: Cutting-Edge Strategies for Modern Professionals`,
-                    `${topic} Fundamentals: Building a Strong Foundation for Success`,
-                    `The Art and Science of ${topic}: A Comprehensive Analysis`,
-                    `${topic} Innovation: Pioneering Approaches and Breakthrough Technologies`,
-                    `Professional ${topic}: Industry Insights and Expert Recommendations`,
-                    `${topic} Mastery: From Beginner to Expert in Modern Applications`,
-                    `The ${topic} Handbook: Complete Guide to Modern Implementation`
-                ];
+        // Create unique titles for each blog
+        const titleVariations = [
+          `${topic}: A Comprehensive Guide to Understanding Modern Trends and Future Implications`,
+          `The Complete Guide to ${topic}: Strategies, Implementation, and Best Practices`,
+          `${topic} Explained: From Fundamentals to Advanced Applications`,
+          `Mastering ${topic}: A Deep Dive into Modern Techniques and Methodologies`,
+          `The Future of ${topic}: Emerging Trends and Revolutionary Approaches`,
+          `${topic} in Practice: Real-World Applications and Success Stories`,
+          `Understanding ${topic}: A Professional's Guide to Implementation`,
+          `${topic} Revolution: How Technology is Transforming the Industry`,
+          `Advanced ${topic}: Cutting-Edge Strategies for Modern Professionals`,
+          `${topic} Fundamentals: Building a Strong Foundation for Success`,
+          `The Art and Science of ${topic}: A Comprehensive Analysis`,
+          `${topic} Innovation: Pioneering Approaches and Breakthrough Technologies`,
+          `Professional ${topic}: Industry Insights and Expert Recommendations`,
+          `${topic} Mastery: From Beginner to Expert in Modern Applications`,
+          `The ${topic} Handbook: Complete Guide to Modern Implementation`
+        ];
 
-                const title = titleVariations[blogCount % titleVariations.length];
+        const title = titleVariations[blogCount % titleVariations.length];
 
-                const blog = {
-                    title,
-                    slug: slugify(title),
-                    content: generateBlogContent(title, category, topic, blogCount),
-                    author: authorData.name,
-                    authorProfileImage: authorData.image,
-                    category,
-                    topic,
-                    imageUrl: getTopicImages(topic, category, 0),
-                    createdAt: Timestamp.fromDate(new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000)), // Random date within last year
-                    readingTime: Math.floor(Math.random() * 10) + 8, // 8-17 minutes
-                    tags: [category, topic.toLowerCase().replace(/\s+/g, '-'), 'comprehensive', 'guide', 'analysis'],
-                    views: Math.floor(Math.random() * 1000) + 100,
-                    likes: Math.floor(Math.random() * 50) + 5,
-                    published: true
-                };
+        const blog = {
+          title,
+          slug: slugify(title),
+          content: generateBlogContent(title, category, topic, blogCount),
+          author: authorData.name,
+          authorProfileImage: authorData.image,
+          category,
+          topic,
+          imageUrl: getTopicImages(topic, category, 0),
+          createdAt: Timestamp.fromDate(new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000)), // Random date within last year
+          readingTime: Math.floor(Math.random() * 10) + 8, // 8-17 minutes
+          tags: [category, topic.toLowerCase().replace(/\s+/g, '-'), 'comprehensive', 'guide', 'analysis'],
+          views: Math.floor(Math.random() * 1000) + 100,
+          likes: Math.floor(Math.random() * 50) + 5,
+          published: true
+        };
 
-                blogs.push(blog);
-                blogCount++;
-            }
-            if (blogCount >= 100) break;
-        }
-
-        // Add blogs to Firebase
-        console.log('Adding blogs to Firebase...');
-        const addedBlogs = [];
-
-        for (const blog of blogs) {
-            try {
-                const docRef = await addDoc(collection(db, 'posts'), blog);
-                addedBlogs.push({ id: docRef.id, title: blog.title });
-                console.log(`Added blog: ${blog.title}`);
-            } catch (error) {
-                console.error('Error adding blog:', error);
-            }
-        }
-
-        return NextResponse.json({
-            success: true,
-            message: `Successfully added ${addedBlogs.length} blogs to the database!`,
-            blogs: addedBlogs
-        });
-
-    } catch (error) {
-        console.error('Error populating blogs:', error);
-        return NextResponse.json({
-            success: false,
-            error: 'Failed to populate blogs'
-        }, { status: 500 });
+        blogs.push(blog);
+        blogCount++;
+      }
+      if (blogCount >= 100) break;
     }
+
+    // Add blogs to Firebase
+    console.log('Adding blogs to Firebase...');
+    const addedBlogs = [];
+
+    for (const blog of blogs) {
+      try {
+        const docRef = await addDoc(collection(db, 'posts'), blog);
+        addedBlogs.push({ id: docRef.id, title: blog.title });
+        console.log(`Added blog: ${blog.title}`);
+      } catch (error) {
+        console.error('Error adding blog:', error);
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: `Successfully added ${addedBlogs.length} blogs to the database!`,
+      blogs: addedBlogs
+    });
+
+  } catch (error) {
+    console.error('Error populating blogs:', error);
+    return NextResponse.json({
+      success: false,
+      error: 'Failed to populate blogs'
+    }, { status: 500 });
+  }
 }

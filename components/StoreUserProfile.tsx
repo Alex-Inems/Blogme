@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { db } from '@/lib/firebase';
 import { doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
-import { storage } from '@/lib/firebase';
+import { uploadImage } from '@/lib/cloudinary-upload';
 import Image from 'next/image';
 //import { followUser } from '../lib/userFollowUtils'; // Adjust the import path
 
@@ -19,14 +19,14 @@ const StoreUserProfile = () => {
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
   const [introduction, setIntroduction] = useState<string>('');
   const [topics, setTopics] = useState<string[]>([]);
-  
+
   useEffect(() => {
     const checkAndFetchUserProfile = async () => {
       if (!user) return;
 
       const userRef = doc(db, 'users', user.id);
       const docSnapshot = await getDoc(userRef);
-      
+
       if (!docSnapshot.exists()) {
         // Create user document with default values if it doesn't exist
         const defaultProfile = {
@@ -55,10 +55,8 @@ const StoreUserProfile = () => {
 
   const handleImageUpload = async (file: File): Promise<string> => {
     if (!user) throw new Error('User is not defined');
-    const storageRef = ref(storage, `profileImages/${user.id}`);
-    await uploadBytes(storageRef, file);
-    const downloadURL = await getDownloadURL(storageRef);
-    return downloadURL;
+    const url = await uploadImage(file, `profileImages/${user.id}`);
+    return url;
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -88,7 +86,7 @@ const StoreUserProfile = () => {
     }
 
     const userRef = doc(db, 'users', user.id);
-    
+
     try {
       const docSnapshot = await getDoc(userRef);
       if (!docSnapshot.exists()) {
@@ -97,10 +95,15 @@ const StoreUserProfile = () => {
       }
 
       await updateDoc(userRef, updates);
-      console.log('Profile updated successfully');
+      toast.success('Profile updated', {
+        description: 'Your profile has been updated successfully.',
+      });
       router.push('/');
     } catch (error) {
       console.error('Error updating profile:', (error as Error).message);
+      toast.error('Error updating profile', {
+        description: 'Please try again. If the problem persists, contact support.',
+      });
     }
   };
 

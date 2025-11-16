@@ -6,19 +6,19 @@
 
 /* Responsive blog content styles */
 .blog-content {
-  @apply text-gray-800 dark:text-gray-200 leading-relaxed;
+  @apply text-gray-800 dark:text-zinc-200 leading-relaxed;
 }
 
 .blog-content h1 {
-  @apply text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 text-gray-900 dark:text-white;
+  @apply text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 text-gray-900 dark:text-zinc-50;
 }
 
 .blog-content h2 {
-  @apply text-xl sm:text-2xl lg:text-3xl font-semibold mb-4 mt-8 text-gray-800 dark:text-gray-100;
+  @apply text-xl sm:text-2xl lg:text-3xl font-semibold mb-4 mt-8 text-gray-800 dark:text-zinc-100;
 }
 
 .blog-content h3 {
-  @apply text-lg sm:text-xl lg:text-2xl font-medium mb-3 mt-6 text-gray-700 dark:text-gray-200;
+  @apply text-lg sm:text-xl lg:text-2xl font-medium mb-3 mt-6 text-gray-700 dark:text-zinc-200;
 }
 
 .blog-content p {
@@ -35,15 +35,15 @@
 }
 
 .blog-content blockquote {
-  @apply border-l-4 border-orange-500 pl-4 my-6 italic text-gray-600 dark:text-gray-400;
+  @apply border-l-4 border-orange-500 pl-4 my-6 italic text-gray-600 dark:text-zinc-400;
 }
 
 .blog-content code {
-  @apply bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-sm font-mono;
+  @apply bg-gray-100 dark:bg-zinc-800 px-2 py-1 rounded text-sm font-mono;
 }
 
 .blog-content pre {
-  @apply bg-gray-100 dark:bg-gray-800 p-4 rounded-lg overflow-x-auto my-4;
+  @apply bg-gray-100 dark:bg-zinc-800 p-4 rounded-lg overflow-x-auto my-4;
 }
 
 .blog-content pre code {
@@ -61,7 +61,7 @@
 }
 
 .image-caption {
-  @apply text-sm text-gray-500 dark:text-gray-400 mt-2 italic;
+  @apply text-sm text-gray-500 dark:text-zinc-400 mt-2 italic;
 }
 
 @media (max-width: 640px) {
@@ -98,8 +98,8 @@ body {
 }
 
 html.dark {
-  background-color: #0f172a;
-  color: #ffffff;
+  background-color: #09090b;
+  color: #fafafa;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
@@ -189,4 +189,176 @@ body {
 ::-webkit-scrollbar-thumb {
   background: #888;
   border-radius: 12px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #52525b;
+  border-radius: 12px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #18181b;
+}
+
+/* Clerk Modal Centering and Styling */
+.cl-modal {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 1rem !important;
+  z-index: 9999 !important;
+}
+
+.cl-modalBackdrop {
+  background-color: rgba(0, 0, 0, 0.6) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+.dark .cl-modalBackdrop {
+  background-color: rgba(0, 0, 0, 0.7) !important;
+}
+
+.cl-modalContent {
+  margin: auto !important;
+  max-width: 28rem !important;
+  width: 100% !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+  position: relative !important;
+  transform: none !important;
+  top: auto !important;
+  left: auto !important;
+  background-color: transparent !important;
+}
+
+.cl-card {
+  margin: 0 !important;
+  max-width: 100% !important;
+  background-color: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+.dark .cl-card {
+  background-color: #18181b !important;
+  border-color: #3f3f46 !important;
+}
+
+.cl-headerTitle {
+  color: #18181b !important;
+}
+
+.dark .cl-headerTitle {
+  color: #fafafa !important;
+}
+
+.cl-headerSubtitle {
+  color: #52525b !important;
+}
+
+.dark .cl-headerSubtitle {
+  color: #a1a1aa !important;
+}
+
+.cl-formFieldLabel {
+  color: #374151 !important;
+}
+
+.dark .cl-formFieldLabel {
+  color: #d4d4d8 !important;
+}
+
+.cl-formFieldInput {
+  background-color: #ffffff !important;
+  border-color: #e5e7eb !important;
+  color: #18181b !important;
+}
+
+.dark .cl-formFieldInput {
+  background-color: #27272a !important;
+  border-color: #3f3f46 !important;
+  color: #fafafa !important;
+}
+
+.cl-socialButtonsBlockButton {
+  background-color: #ffffff !important;
+  border-color: #e5e7eb !important;
+  color: #18181b !important;
+}
+
+.dark .cl-socialButtonsBlockButton {
+  background-color: #27272a !important;
+  border-color: #3f3f46 !important;
+  color: #fafafa !important;
+}
+
+.cl-socialButtonsBlockButton:hover {
+  background-color: #f9fafb !important;
+  border-color: #f97316 !important;
+}
+
+.dark .cl-socialButtonsBlockButton:hover {
+  background-color: #3f3f46 !important;
+  border-color: #f97316 !important;
+}
+
+.cl-formButtonPrimary {
+  background: linear-gradient(to right, #f97316, #ea580c) !important;
+  color: #ffffff !important;
+}
+
+.cl-formButtonPrimary:hover {
+  background: linear-gradient(to right, #ea580c, #c2410c) !important;
+}
+
+.cl-footerAction {
+  color: #4b5563 !important;
+}
+
+.dark .cl-footerAction {
+  color: #a1a1aa !important;
+}
+
+.cl-footerActionLink {
+  color: #f97316 !important;
+}
+
+.cl-footerActionLink:hover {
+  color: #ea580c !important;
+}
+
+.dark .cl-footerActionLink {
+  color: #fb923c !important;
+}
+
+.dark .cl-footerActionLink:hover {
+  color: #f97316 !important;
+}
+
+.cl-dividerLine {
+  background-color: #e5e7eb !important;
+}
+
+.dark .cl-dividerLine {
+  background-color: #3f3f46 !important;
+}
+
+.cl-dividerText {
+  color: #6b7280 !important;
+}
+
+.dark .cl-dividerText {
+  color: #a1a1aa !important;
+}
+
+@media (max-width: 640px) {
+  .cl-modalContent {
+    max-width: calc(100% - 2rem) !important;
+    margin: 1rem !important;
+    max-height: 95vh !important;
+  }
+
+  .cl-modal {
+    padding: 0.5rem !important;
+  }
 }

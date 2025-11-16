@@ -1,71 +1,143 @@
-// userFollowUtils.ts
+import { db } from './firebase';
+import { doc, getDoc, setDoc, updateDoc, increment, collection, query, where, getDocs } from 'firebase/firestore';
 
-import { db } from '@/lib/firebase';
-import { doc, updateDoc, arrayUnion, arrayRemove, getDoc } from 'firebase/firestore';
+export interface FollowData {
+  followerId: string;
+  followingId: string;
+  createdAt: Date;
+}
 
 /**
- * Function to follow a user.
- *
- * @param currentUserId - The ID of the user who is following.
- * @param targetUserId - The ID of the user being followed.
- * @throws Will throw an error if the Firestore update fails.
+ * Follow a user
  */
-export const followUser = async (currentUserId: string, targetUserId: string) => {
-  // Reference to the current user's document in Firestore
-  const currentUserRef = doc(db, 'users', currentUserId);
+export async function followUser(followerId: string, followingId: string): Promise<void> {
+  if (followerId === followingId) {
+    throw new Error('Cannot follow yourself');
+  }
 
+  const followRef = doc(db, 'follows', `${followerId}_${followingId}`);
+  const followDoc = await getDoc(followRef);
+
+  if (followDoc.exists()) {
+    throw new Error('Already following this user');
+  }
+
+  // Create follow relationship
+  await setDoc(followRef, {
+    followerId,
+    followingId,
+    createdAt: Timestamp.fromDate(new Date()),
+  });
+
+  // Update follower's following count (with error handling)
   try {
-    // Update the current user's document to include the target user ID in the following array
-    await updateDoc(currentUserRef, {
-      following: arrayUnion(targetUserId), // Use arrayUnion to avoid duplicates
-    });
-
-    console.log(`User ${currentUserId} is now following ${targetUserId}`);
+    const followerRef = doc(db, 'users', followerId);
+    const followerDoc = await getDoc(followerRef);
+    if (followerDoc.exists()) {
+      await updateDoc(followerRef, {
+        following: increment(1),
+      });
+    } else {
+      // Create user document if it doesn't exist
+      await setDoc(followerRef, {
+        following: 1,
+        followers: 0,
+      });
+    }
   } catch (error) {
-    console.error('Error following user:', (error as Error).message);
-    throw error; // Rethrow the error for handling in the component
+    console.error('Error updating follower count:', error);
   }
-};
 
-/**
- * Function to unfollow a user.
- *
- * @param currentUserId - The ID of the user who is unfollowing.
- * @param targetUserId - The ID of the user being unfollowed.
- * @throws Will throw an error if the Firestore update fails.
- */
-export const unfollowUser = async (currentUserId: string, targetUserId: string) => {
-  // Reference to the current user's document in Firestore
-  const currentUserRef = doc(db, 'users', currentUserId);
-
+  // Update following user's followers count (with error handling)
   try {
-    // Update the current user's document to remove the target user ID from the following array
-    await updateDoc(currentUserRef, {
-      following: arrayRemove(targetUserId), // Remove the target user from the following array
-    });
-
-    console.log(`User ${currentUserId} has unfollowed ${targetUserId}`);
+    const followingRef = doc(db, 'users', followingId);
+    const followingDoc = await getDoc(followingRef);
+    if (followingDoc.exists()) {
+      await updateDoc(followingRef, {
+        followers: increment(1),
+      });
+    } else {
+      // Create user document if it doesn't exist
+      await setDoc(followingRef, {
+        following: 0,
+        followers: 1,
+      });
+    }
   } catch (error) {
-    console.error('Error unfollowing user:', (error as Error).message);
-    throw error; // Rethrow the error for handling in the component
+    console.error('Error updating followers count:', error);
   }
-};
+}
 
 /**
- * Function to check if the current user is following the target user.
- *
- * @param currentUserId - The ID of the user to check.
- * @param targetUserId - The ID of the user being checked.
- * @returns A promise that resolves to a boolean indicating if the user is followed.
+ * Unfollow a user
  */
-export const checkIfFollowing = async (currentUserId: string, targetUserId: string): Promise<boolean> => {
-  const currentUserRef = doc(db, 'users', currentUserId);
-  const currentUserDoc = await getDoc(currentUserRef);
+export async function unfollowUser(followerId: string, followingId: string): Promise<void> {
+  const followRef = doc(db, 'follows', `${followerId}_${followingId}`);
+  const followDoc = await getDoc(followRef);
 
-  if (currentUserDoc.exists()) {
-    const data = currentUserDoc.data();
-    return data.following?.includes(targetUserId) || false; // Return true if the target user is in the following list
+  if (!followDoc.exists()) {
+    throw new Error('Not following this user');
   }
 
-  return false; // Default return value if user document does not exist
-};
+  // Delete follow relationship
+  await followRef.delete();
+
+  // Update follower's following count (with error handling)
+  try {
+    const followerRef = doc(db, 'users', followerId);
+    const followerDoc = await getDoc(followerRef);
+    if (followerDoc.exists()) {
+      const currentFollowing = followerDoc.data().following || 0;
+      await updateDoc(followerRef, {
+        following: Math.max(0, currentFollowing - 1),
+      });
+    }
+  } catch (error) {
+    console.error('Error updating follower count:', error);
+  }
+
+  // Update following user's followers count (with error handling)
+  try {
+    const followingRef = doc(db, 'users', followingId);
+    const followingDoc = await getDoc(followingRef);
+    if (followingDoc.exists()) {
+      const currentFollowers = followingDoc.data().followers || 0;
+      await updateDoc(followingRef, {
+        followers: Math.max(0, currentFollowers - 1),
+      });
+    }
+  } catch (error) {
+    console.error('Error updating followers count:', error);
+  }
+}
+
+/**
+ * Check if user is following another user
+ */
+export async function isFollowing(followerId: string, followingId: string): Promise<boolean> {
+  if (followerId === followingId) return false;
+
+  const followRef = doc(db, 'follows', `${followerId}_${followingId}`);
+  const followDoc = await getDoc(followRef);
+  return followDoc.exists();
+}
+
+/**
+ * Get list of users a user is following
+ */
+export async function getFollowing(userId: string): Promise<string[]> {
+  const followsRef = collection(db, 'follows');
+  const q = query(followsRef, where('followerId', '==', userId));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => doc.data().followingId);
+}
+
+/**
+ * Get list of users following a user
+ */
+export async function getFollowers(userId: string): Promise<string[]> {
+  const followsRef = collection(db, 'follows');
+  const q = query(followsRef, where('followingId', '==', userId));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => doc.data().followerId);
+}

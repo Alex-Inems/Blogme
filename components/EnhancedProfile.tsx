@@ -2,14 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import { doc, updateDoc, getDoc, setDoc, collection, query, where, getDocs, orderBy } from 'firebase/firestore';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
-import { storage } from '@/lib/firebase';
+import { uploadImage } from '@/lib/cloudinary-upload';
+import { toast } from 'sonner';
 import Image from 'next/image';
 import Link from 'next/link';
-import { FiEdit3, FiSettings, FiUser, FiBookOpen, FiHeart, FiEye, FiCalendar, FiTrendingUp, FiPlus, FiTrash2, FiStar, FiAward } from 'react-icons/fi';
+import { FiEdit3, FiSettings, FiUser, FiBookOpen, FiHeart, FiEye, FiPlus, FiStar, FiAward } from 'react-icons/fi';
 // import { getUserPoints, getLevelInfo, getUnlockedAchievements, type UserPoints } from '@/lib/pointsSystem';
 
 interface UserProfile {
@@ -43,7 +42,7 @@ interface UserPost {
 
 const EnhancedProfile = () => {
     const { user } = useUser();
-    const router = useRouter();
+    // const router = useRouter();
     const [activeTab, setActiveTab] = useState('overview');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -84,113 +83,109 @@ const EnhancedProfile = () => {
     const [showImageUpload, setShowImageUpload] = useState(false);
 
     useEffect(() => {
-        if (user) {
-            fetchUserData();
-        }
-    }, [user]);
+        const fetchUserData = async () => {
+            if (!user) return;
 
-    const fetchUserData = async () => {
-        if (!user) return;
+            try {
+                setLoading(true);
 
-        try {
-            setLoading(true);
+                // Fetch user profile
+                const userRef = doc(db, 'users', user.id);
+                const userDoc = await getDoc(userRef);
 
-            // Fetch user profile
-            const userRef = doc(db, 'users', user.id);
-            const userDoc = await getDoc(userRef);
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    setProfile({
+                        username: userData.username || user.username || '',
+                        email: userData.email || user.emailAddresses[0]?.emailAddress || '',
+                        introduction: userData.introduction || '',
+                        topics: userData.topics || [],
+                        profileImageUrl: userData.profileImageUrl || user.imageUrl || null,
+                        joinDate: userData.joinDate || user.createdAt?.toLocaleDateString() || '',
+                        totalPosts: userData.totalPosts || 0,
+                        totalViews: userData.totalViews || 0,
+                        totalLikes: userData.totalLikes || 0,
+                        followers: userData.followers || 0,
+                        following: userData.following || 0
+                    });
 
-            if (userDoc.exists()) {
-                const userData = userDoc.data();
-                setProfile({
-                    username: userData.username || user.username || '',
-                    email: userData.email || user.emailAddresses[0]?.emailAddress || '',
-                    introduction: userData.introduction || '',
-                    topics: userData.topics || [],
-                    profileImageUrl: userData.profileImageUrl || user.imageUrl || null,
-                    joinDate: userData.joinDate || user.createdAt?.toLocaleDateString() || '',
-                    totalPosts: userData.totalPosts || 0,
-                    totalViews: userData.totalViews || 0,
-                    totalLikes: userData.totalLikes || 0,
-                    followers: userData.followers || 0,
-                    following: userData.following || 0
-                });
-
-                // Load settings
-                if (userData.settings) {
-                    setSettings(userData.settings);
+                    // Load settings
+                    if (userData.settings) {
+                        setSettings(userData.settings);
+                    }
+                    setTempProfile({
+                        username: userData.username || user.username || '',
+                        email: userData.email || user.emailAddresses[0]?.emailAddress || '',
+                        introduction: userData.introduction || '',
+                        topics: userData.topics || [],
+                        profileImageUrl: userData.profileImageUrl || user.imageUrl || null,
+                        joinDate: userData.joinDate || user.createdAt?.toLocaleDateString() || '',
+                        totalPosts: userData.totalPosts || 0,
+                        totalViews: userData.totalViews || 0,
+                        totalLikes: userData.totalLikes || 0,
+                        followers: userData.followers || 0,
+                        following: userData.following || 0
+                    });
+                } else {
+                    // Create new user profile
+                    const newProfile = {
+                        username: user.username || '',
+                        email: user.emailAddresses[0]?.emailAddress || '',
+                        introduction: '',
+                        topics: [],
+                        profileImageUrl: user.imageUrl || null,
+                        joinDate: user.createdAt?.toLocaleDateString() || new Date().toLocaleDateString(),
+                        totalPosts: 0,
+                        totalViews: 0,
+                        totalLikes: 0,
+                        followers: 0,
+                        following: 0
+                    };
+                    await setDoc(userRef, newProfile);
+                    setProfile(newProfile);
+                    setTempProfile(newProfile);
                 }
-                setTempProfile({
-                    username: userData.username || user.username || '',
-                    email: userData.email || user.emailAddresses[0]?.emailAddress || '',
-                    introduction: userData.introduction || '',
-                    topics: userData.topics || [],
-                    profileImageUrl: userData.profileImageUrl || user.imageUrl || null,
-                    joinDate: userData.joinDate || user.createdAt?.toLocaleDateString() || '',
-                    totalPosts: userData.totalPosts || 0,
-                    totalViews: userData.totalViews || 0,
-                    totalLikes: userData.totalLikes || 0,
-                    followers: userData.followers || 0,
-                    following: userData.following || 0
-                });
-            } else {
-                // Create new user profile
-                const newProfile = {
-                    username: user.username || '',
-                    email: user.emailAddresses[0]?.emailAddress || '',
-                    introduction: '',
-                    topics: [],
-                    profileImageUrl: user.imageUrl || null,
-                    joinDate: user.createdAt?.toLocaleDateString() || new Date().toLocaleDateString(),
-                    totalPosts: 0,
-                    totalViews: 0,
-                    totalLikes: 0,
-                    followers: 0,
-                    following: 0
-                };
-                await setDoc(userRef, newProfile);
-                setProfile(newProfile);
-                setTempProfile(newProfile);
+
+                // Fetch user posts
+                const postsRef = collection(db, 'posts');
+                const q = query(postsRef, where('author', '==', user.fullName || user.username || ''), orderBy('createdAt', 'desc'));
+                const postsSnapshot = await getDocs(q);
+                const posts = postsSnapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                })) as UserPost[];
+
+                setUserPosts(posts);
+
+                // Fetch user points - commented out for now
+                // const points = await getUserPoints(user.id);
+                // setUserPoints(points);
+
+                // Update stats
+                const totalViews = posts.reduce((sum, post) => sum + (post.views || 0), 0);
+                const totalLikes = posts.reduce((sum, post) => sum + (post.likes || 0), 0);
+
+                setProfile(prev => ({
+                    ...prev,
+                    totalPosts: posts.length,
+                    totalViews,
+                    totalLikes
+                }));
+
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+            } finally {
+                setLoading(false);
             }
+        };
 
-            // Fetch user posts
-            const postsRef = collection(db, 'posts');
-            const q = query(postsRef, where('author', '==', user.fullName || user.username || ''), orderBy('createdAt', 'desc'));
-            const postsSnapshot = await getDocs(q);
-            const posts = postsSnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            })) as UserPost[];
-
-            setUserPosts(posts);
-
-            // Fetch user points - commented out for now
-            // const points = await getUserPoints(user.id);
-            // setUserPoints(points);
-
-            // Update stats
-            const totalViews = posts.reduce((sum, post) => sum + (post.views || 0), 0);
-            const totalLikes = posts.reduce((sum, post) => sum + (post.likes || 0), 0);
-
-            setProfile(prev => ({
-                ...prev,
-                totalPosts: posts.length,
-                totalViews,
-                totalLikes
-            }));
-
-        } catch (error) {
-            console.error('Error fetching user data:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+        fetchUserData();
+    }, [user]);
 
     const handleImageUpload = async (file: File): Promise<string> => {
         if (!user) throw new Error('User is not defined');
-        const storageRef = ref(storage, `profileImages/${user.id}`);
-        await uploadBytes(storageRef, file);
-        const downloadURL = await getDownloadURL(storageRef);
-        return downloadURL;
+        const url = await uploadImage(file, `profileImages/${user.id}`);
+        return url;
     };
 
     const handleSaveProfile = async () => {
@@ -200,7 +195,7 @@ const EnhancedProfile = () => {
             setSaving(true);
             const userRef = doc(db, 'users', user.id);
 
-            const updates: any = {
+            const updates: Record<string, string | string[] | null | undefined> = {
                 username: tempProfile.username,
                 email: tempProfile.email,
                 introduction: tempProfile.introduction,
@@ -240,7 +235,7 @@ const EnhancedProfile = () => {
         }));
     };
 
-    const handleSettingsChange = (field: string, value: any) => {
+    const handleSettingsChange = (field: string, value: boolean | string) => {
         setSettings(prev => ({
             ...prev,
             [field]: value
@@ -254,10 +249,14 @@ const EnhancedProfile = () => {
             setSaving(true);
             const userRef = doc(db, 'users', user.id);
             await updateDoc(userRef, { settings });
-            alert('Settings saved successfully!');
+            toast.success('Settings saved', {
+                description: 'Your preferences have been updated successfully.',
+            });
         } catch (error) {
             console.error('Error saving settings:', error);
-            alert('Error saving settings. Please try again.');
+            toast.error('Error saving settings', {
+                description: 'Please try again. If the problem persists, contact support.',
+            });
         } finally {
             setSaving(false);
         }
@@ -276,10 +275,14 @@ const EnhancedProfile = () => {
             setTempProfile(prev => ({ ...prev, profileImageUrl: imageUrl }));
             setProfileImage(null);
             setShowImageUpload(false);
-            alert('Profile picture updated successfully!');
+            toast.success('Profile picture updated', {
+                description: 'Your new profile picture is now visible to everyone.',
+            });
         } catch (error) {
             console.error('Error updating profile picture:', error);
-            alert('Error updating profile picture. Please try again.');
+            toast.error('Error updating profile picture', {
+                description: 'Please try again. Make sure the image is valid and under 5MB.',
+            });
         } finally {
             setSaving(false);
         }
@@ -287,21 +290,36 @@ const EnhancedProfile = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-slate-900">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-                    <p className="text-gray-600 dark:text-gray-400">Loading profile...</p>
+            <div className="min-h-screen bg-gray-50 dark:bg-zinc-950 py-12">
+                <div className="w-full px-1">
+                    <div className="max-w-6xl mx-auto">
+                        <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-md p-8">
+                            <div className="animate-pulse space-y-6">
+                                <div className="flex items-center space-x-4">
+                                    <div className="w-24 h-24 bg-gray-200 dark:bg-zinc-800 rounded-full"></div>
+                                    <div className="space-y-3 flex-1">
+                                        <div className="h-6 bg-gray-200 dark:bg-zinc-800 rounded w-1/3"></div>
+                                        <div className="h-4 bg-gray-200 dark:bg-zinc-800 rounded w-1/2"></div>
+                                    </div>
+                                </div>
+                                <div className="space-y-4">
+                                    <div className="h-4 bg-gray-200 dark:bg-zinc-800 rounded w-full"></div>
+                                    <div className="h-4 bg-gray-200 dark:bg-zinc-800 rounded w-5/6"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
+        <div className="min-h-screen bg-gray-50 dark:bg-zinc-950">
             <div className="w-full px-1">
                 <div className="max-w-6xl mx-auto py-8">
                     {/* Profile Header */}
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 mb-8">
+                    <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-lg p-8 mb-8">
                         <div className="flex flex-col lg:flex-row items-start lg:items-center space-y-6 lg:space-y-0 lg:space-x-8">
                             {/* Profile Image */}
                             <div className="relative">
@@ -331,24 +349,24 @@ const EnhancedProfile = () => {
                             {/* Profile Image Upload Modal */}
                             {showImageUpload && (
                                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                                    <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md w-full mx-4">
-                                        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Change Profile Picture</h3>
+                                    <div className="bg-white dark:bg-zinc-900 rounded-2xl p-8 max-w-md w-full mx-4">
+                                        <h3 className="text-xl font-semibold text-gray-900 dark:text-zinc-50 mb-4">Change Profile Picture</h3>
 
                                         <div className="mb-6">
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-2">
                                                 Select New Image
                                             </label>
                                             <input
                                                 type="file"
                                                 accept="image/*"
                                                 onChange={handleFileChange}
-                                                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                                className="w-full p-3 border border-gray-300 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-50"
                                             />
                                         </div>
 
                                         {profileImage && (
                                             <div className="mb-6">
-                                                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Preview:</p>
+                                                <p className="text-sm font-medium text-gray-700 dark:text-zinc-300 mb-2">Preview:</p>
                                                 <Image
                                                     src={URL.createObjectURL(profileImage)}
                                                     alt="Preview"
@@ -385,7 +403,7 @@ const EnhancedProfile = () => {
                             <div className="flex-1">
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
                                     <div>
-                                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                                        <h1 className="text-3xl font-bold text-gray-900 dark:text-zinc-50 mb-2">
                                             {isEditing ? (
                                                 <input
                                                     type="text"
@@ -397,7 +415,7 @@ const EnhancedProfile = () => {
                                                 tempProfile.username
                                             )}
                                         </h1>
-                                        <p className="text-gray-600 dark:text-gray-400">
+                                        <p className="text-gray-600 dark:text-zinc-400">
                                             {isEditing ? (
                                                 <input
                                                     type="email"
@@ -409,7 +427,7 @@ const EnhancedProfile = () => {
                                                 tempProfile.email
                                             )}
                                         </p>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                        <p className="text-sm text-gray-500 dark:text-zinc-400 mt-1">
                                             Joined {profile.joinDate}
                                         </p>
                                     </div>
@@ -453,11 +471,11 @@ const EnhancedProfile = () => {
                                             value={tempProfile.introduction}
                                             onChange={(e) => handleInputChange('introduction', e.target.value)}
                                             placeholder="Tell us about yourself..."
-                                            className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                            className="w-full p-3 border border-gray-300 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-50"
                                             rows={3}
                                         />
                                     ) : (
-                                        <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                                        <p className="text-gray-700 dark:text-zinc-300 leading-relaxed">
                                             {profile.introduction || "No bio yet. Click 'Edit Profile' to add one."}
                                         </p>
                                     )}
@@ -465,14 +483,14 @@ const EnhancedProfile = () => {
 
                                 {/* Topics */}
                                 <div>
-                                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Interests</h3>
+                                    <h3 className="text-sm font-semibold text-gray-900 dark:text-zinc-50 mb-2">Interests</h3>
                                     {isEditing ? (
                                         <input
                                             type="text"
                                             value={tempProfile.topics.join(', ')}
                                             onChange={(e) => handleInputChange('topics', e.target.value.split(',').map(t => t.trim()))}
                                             placeholder="Technology, Writing, Design..."
-                                            className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                            className="w-full p-3 border border-gray-300 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-50"
                                         />
                                     ) : (
                                         <div className="flex flex-wrap gap-2">
@@ -486,7 +504,7 @@ const EnhancedProfile = () => {
                                                     </span>
                                                 ))
                                             ) : (
-                                                <span className="text-gray-500 dark:text-gray-400 text-sm">No interests added yet</span>
+                                                <span className="text-gray-500 dark:text-zinc-400 text-sm">No interests added yet</span>
                                             )}
                                         </div>
                                     )}
@@ -497,30 +515,30 @@ const EnhancedProfile = () => {
 
                     {/* Stats Cards */}
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-6 mb-8">
-                        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg text-center">
+                        <div className="bg-white dark:bg-zinc-900 rounded-xl p-6 shadow-lg text-center">
                             <FiBookOpen className="w-8 h-8 text-orange-500 mx-auto mb-2" />
-                            <div className="text-2xl font-bold text-gray-900 dark:text-white">{profile.totalPosts}</div>
-                            <div className="text-sm text-gray-600 dark:text-gray-400">Posts</div>
+                            <div className="text-2xl font-bold text-gray-900 dark:text-zinc-50">{profile.totalPosts}</div>
+                            <div className="text-sm text-gray-600 dark:text-zinc-400">Posts</div>
                         </div>
-                        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg text-center">
+                        <div className="bg-white dark:bg-zinc-900 rounded-xl p-6 shadow-lg text-center">
                             <FiEye className="w-8 h-8 text-orange-500 mx-auto mb-2" />
-                            <div className="text-2xl font-bold text-gray-900 dark:text-white">{profile.totalViews.toLocaleString()}</div>
-                            <div className="text-sm text-gray-600 dark:text-gray-400">Views</div>
+                            <div className="text-2xl font-bold text-gray-900 dark:text-zinc-50">{profile.totalViews.toLocaleString()}</div>
+                            <div className="text-sm text-gray-600 dark:text-zinc-400">Views</div>
                         </div>
-                        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg text-center">
+                        <div className="bg-white dark:bg-zinc-900 rounded-xl p-6 shadow-lg text-center">
                             <FiHeart className="w-8 h-8 text-orange-500 mx-auto mb-2" />
-                            <div className="text-2xl font-bold text-gray-900 dark:text-white">{profile.totalLikes.toLocaleString()}</div>
-                            <div className="text-sm text-gray-600 dark:text-gray-400">Likes</div>
+                            <div className="text-2xl font-bold text-gray-900 dark:text-zinc-50">{profile.totalLikes.toLocaleString()}</div>
+                            <div className="text-sm text-gray-600 dark:text-zinc-400">Likes</div>
                         </div>
-                        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg text-center">
+                        <div className="bg-white dark:bg-zinc-900 rounded-xl p-6 shadow-lg text-center">
                             <FiStar className="w-8 h-8 text-orange-500 mx-auto mb-2" />
-                            <div className="text-2xl font-bold text-gray-900 dark:text-white">0</div>
-                            <div className="text-sm text-gray-600 dark:text-gray-400">Points</div>
+                            <div className="text-2xl font-bold text-gray-900 dark:text-zinc-50">0</div>
+                            <div className="text-sm text-gray-600 dark:text-zinc-400">Points</div>
                         </div>
-                        <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg text-center">
+                        <div className="bg-white dark:bg-zinc-900 rounded-xl p-6 shadow-lg text-center">
                             <FiAward className="w-8 h-8 text-orange-500 mx-auto mb-2" />
-                            <div className="text-2xl font-bold text-gray-900 dark:text-white">0</div>
-                            <div className="text-sm text-gray-600 dark:text-gray-400">Achievements</div>
+                            <div className="text-2xl font-bold text-gray-900 dark:text-zinc-50">0</div>
+                            <div className="text-sm text-gray-600 dark:text-zinc-400">Achievements</div>
                         </div>
                     </div>
 
@@ -547,8 +565,8 @@ const EnhancedProfile = () => {
                     )} */}
 
                     {/* Tabs */}
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
-                        <div className="border-b border-gray-200 dark:border-gray-700">
+                    <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-lg">
+                        <div className="border-b border-gray-200 dark:border-zinc-800">
                             <nav className="flex space-x-8 px-8">
                                 {[
                                     { id: 'overview', label: 'Overview', icon: FiUser },
@@ -576,10 +594,10 @@ const EnhancedProfile = () => {
                         <div className="p-8">
                             {activeTab === 'overview' && (
                                 <div className="space-y-6">
-                                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Recent Activity</h3>
+                                    <h3 className="text-xl font-semibold text-gray-900 dark:text-zinc-50 mb-4">Recent Activity</h3>
                                     <div className="space-y-4">
                                         {userPosts.slice(0, 3).map((post) => (
-                                            <div key={post.id} className="flex items-center space-x-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                            <div key={post.id} className="flex items-center space-x-4 p-4 bg-gray-50 dark:bg-zinc-800 rounded-lg">
                                                 <div className="flex-shrink-0">
                                                     {post.imageUrl ? (
                                                         <Image
@@ -596,10 +614,10 @@ const EnhancedProfile = () => {
                                                     )}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <Link href={`/blog/${post.slug || post.id}`} className="text-gray-900 dark:text-white hover:text-orange-600 dark:hover:text-orange-400 font-medium">
+                                                    <Link href={`/blog/${post.slug || post.id}`} className="text-gray-900 dark:text-zinc-50 hover:text-orange-600 dark:hover:text-orange-400 font-medium">
                                                         {post.title}
                                                     </Link>
-                                                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                                                    <p className="text-sm text-gray-500 dark:text-zinc-400">
                                                         {post.views || 0} views • {post.likes || 0} likes • {post.createdAt.toDate().toLocaleDateString()}
                                                     </p>
                                                 </div>
@@ -612,7 +630,7 @@ const EnhancedProfile = () => {
                             {activeTab === 'posts' && (
                                 <div className="space-y-6">
                                     <div className="flex items-center justify-between">
-                                        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">My Posts</h3>
+                                        <h3 className="text-xl font-semibold text-gray-900 dark:text-zinc-50">My Posts</h3>
                                         <Link
                                             href="/stories"
                                             className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors flex items-center space-x-2"
@@ -624,7 +642,7 @@ const EnhancedProfile = () => {
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                         {userPosts.map((post) => (
-                                            <div key={post.id} className="bg-gray-50 dark:bg-gray-700 rounded-xl overflow-hidden hover:shadow-lg transition-shadow">
+                                            <div key={post.id} className="bg-gray-50 dark:bg-zinc-800 rounded-xl overflow-hidden hover:shadow-lg transition-shadow">
                                                 <Link href={`/blog/${post.slug || post.id}`}>
                                                     {post.imageUrl ? (
                                                         <Image
@@ -641,10 +659,10 @@ const EnhancedProfile = () => {
                                                     )}
                                                 </Link>
                                                 <div className="p-4">
-                                                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2">
+                                                    <h4 className="font-semibold text-gray-900 dark:text-zinc-50 mb-2 line-clamp-2">
                                                         {post.title}
                                                     </h4>
-                                                    <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+                                                    <div className="flex items-center justify-between text-sm text-gray-500 dark:text-zinc-400">
                                                         <span>{post.views || 0} views</span>
                                                         <span>{post.likes || 0} likes</span>
                                                         <span>{post.createdAt.toDate().toLocaleDateString()}</span>
@@ -659,7 +677,7 @@ const EnhancedProfile = () => {
                             {activeTab === 'settings' && (
                                 <div className="space-y-6">
                                     <div className="flex items-center justify-between">
-                                        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Account Settings</h3>
+                                        <h3 className="text-xl font-semibold text-gray-900 dark:text-zinc-50">Account Settings</h3>
                                         <button
                                             onClick={saveSettings}
                                             disabled={saving}
@@ -671,13 +689,13 @@ const EnhancedProfile = () => {
 
                                     <div className="space-y-6">
                                         {/* Notification Settings */}
-                                        <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6">
-                                            <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Notifications</h4>
+                                        <div className="bg-gray-50 dark:bg-zinc-800 rounded-xl p-6">
+                                            <h4 className="text-lg font-semibold text-gray-900 dark:text-zinc-50 mb-4">Notifications</h4>
                                             <div className="space-y-4">
                                                 <div className="flex items-center justify-between">
                                                     <div>
-                                                        <label className="text-sm font-medium text-gray-900 dark:text-white">Email Notifications</label>
-                                                        <p className="text-sm text-gray-600 dark:text-gray-400">Receive updates via email</p>
+                                                        <label className="text-sm font-medium text-gray-900 dark:text-zinc-50">Email Notifications</label>
+                                                        <p className="text-sm text-gray-600 dark:text-zinc-400">Receive updates via email</p>
                                                     </div>
                                                     <label className="relative inline-flex items-center cursor-pointer">
                                                         <input
@@ -686,14 +704,14 @@ const EnhancedProfile = () => {
                                                             onChange={(e) => handleSettingsChange('emailNotifications', e.target.checked)}
                                                             className="sr-only peer"
                                                         />
-                                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 dark:peer-focus:ring-orange-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-orange-500"></div>
+                                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 dark:peer-focus:ring-orange-800 rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-zinc-600 peer-checked:bg-orange-500"></div>
                                                     </label>
                                                 </div>
 
                                                 <div className="flex items-center justify-between">
                                                     <div>
-                                                        <label className="text-sm font-medium text-gray-900 dark:text-white">Push Notifications</label>
-                                                        <p className="text-sm text-gray-600 dark:text-gray-400">Receive browser notifications</p>
+                                                        <label className="text-sm font-medium text-gray-900 dark:text-zinc-50">Push Notifications</label>
+                                                        <p className="text-sm text-gray-600 dark:text-zinc-400">Receive browser notifications</p>
                                                     </div>
                                                     <label className="relative inline-flex items-center cursor-pointer">
                                                         <input
@@ -702,25 +720,25 @@ const EnhancedProfile = () => {
                                                             onChange={(e) => handleSettingsChange('pushNotifications', e.target.checked)}
                                                             className="sr-only peer"
                                                         />
-                                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 dark:peer-focus:ring-orange-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-orange-500"></div>
+                                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 dark:peer-focus:ring-orange-800 rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-zinc-600 peer-checked:bg-orange-500"></div>
                                                     </label>
                                                 </div>
                                             </div>
                                         </div>
 
                                         {/* Privacy Settings */}
-                                        <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6">
-                                            <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Privacy</h4>
+                                        <div className="bg-gray-50 dark:bg-zinc-800 rounded-xl p-6">
+                                            <h4 className="text-lg font-semibold text-gray-900 dark:text-zinc-50 mb-4">Privacy</h4>
                                             <div className="space-y-4">
                                                 <div className="flex items-center justify-between">
                                                     <div>
-                                                        <label className="text-sm font-medium text-gray-900 dark:text-white">Profile Visibility</label>
-                                                        <p className="text-sm text-gray-600 dark:text-gray-400">Who can see your profile</p>
+                                                        <label className="text-sm font-medium text-gray-900 dark:text-zinc-50">Profile Visibility</label>
+                                                        <p className="text-sm text-gray-600 dark:text-zinc-400">Who can see your profile</p>
                                                     </div>
                                                     <select
                                                         value={settings.profileVisibility}
                                                         onChange={(e) => handleSettingsChange('profileVisibility', e.target.value)}
-                                                        className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                                                        className="bg-white dark:bg-zinc-800 border border-gray-300 dark:border-zinc-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                                                     >
                                                         <option value="public">Public</option>
                                                         <option value="followers">Followers Only</option>
@@ -730,8 +748,8 @@ const EnhancedProfile = () => {
 
                                                 <div className="flex items-center justify-between">
                                                     <div>
-                                                        <label className="text-sm font-medium text-gray-900 dark:text-white">Show Email</label>
-                                                        <p className="text-sm text-gray-600 dark:text-gray-400">Display email on profile</p>
+                                                        <label className="text-sm font-medium text-gray-900 dark:text-zinc-50">Show Email</label>
+                                                        <p className="text-sm text-gray-600 dark:text-zinc-400">Display email on profile</p>
                                                     </div>
                                                     <label className="relative inline-flex items-center cursor-pointer">
                                                         <input
@@ -740,20 +758,20 @@ const EnhancedProfile = () => {
                                                             onChange={(e) => handleSettingsChange('showEmail', e.target.checked)}
                                                             className="sr-only peer"
                                                         />
-                                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 dark:peer-focus:ring-orange-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-orange-500"></div>
+                                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 dark:peer-focus:ring-orange-800 rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-zinc-600 peer-checked:bg-orange-500"></div>
                                                     </label>
                                                 </div>
                                             </div>
                                         </div>
 
                                         {/* Content Settings */}
-                                        <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6">
-                                            <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Content</h4>
+                                        <div className="bg-gray-50 dark:bg-zinc-800 rounded-xl p-6">
+                                            <h4 className="text-lg font-semibold text-gray-900 dark:text-zinc-50 mb-4">Content</h4>
                                             <div className="space-y-4">
                                                 <div className="flex items-center justify-between">
                                                     <div>
-                                                        <label className="text-sm font-medium text-gray-900 dark:text-white">Allow Comments</label>
-                                                        <p className="text-sm text-gray-600 dark:text-gray-400">Let others comment on your posts</p>
+                                                        <label className="text-sm font-medium text-gray-900 dark:text-zinc-50">Allow Comments</label>
+                                                        <p className="text-sm text-gray-600 dark:text-zinc-400">Let others comment on your posts</p>
                                                     </div>
                                                     <label className="relative inline-flex items-center cursor-pointer">
                                                         <input
@@ -762,14 +780,14 @@ const EnhancedProfile = () => {
                                                             onChange={(e) => handleSettingsChange('allowComments', e.target.checked)}
                                                             className="sr-only peer"
                                                         />
-                                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 dark:peer-focus:ring-orange-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-orange-500"></div>
+                                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 dark:peer-focus:ring-orange-800 rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-zinc-600 peer-checked:bg-orange-500"></div>
                                                     </label>
                                                 </div>
 
                                                 <div className="flex items-center justify-between">
                                                     <div>
-                                                        <label className="text-sm font-medium text-gray-900 dark:text-white">Allow Likes</label>
-                                                        <p className="text-sm text-gray-600 dark:text-gray-400">Let others like your posts</p>
+                                                        <label className="text-sm font-medium text-gray-900 dark:text-zinc-50">Allow Likes</label>
+                                                        <p className="text-sm text-gray-600 dark:text-zinc-400">Let others like your posts</p>
                                                     </div>
                                                     <label className="relative inline-flex items-center cursor-pointer">
                                                         <input
@@ -778,15 +796,15 @@ const EnhancedProfile = () => {
                                                             onChange={(e) => handleSettingsChange('allowLikes', e.target.checked)}
                                                             className="sr-only peer"
                                                         />
-                                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 dark:peer-focus:ring-orange-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-orange-500"></div>
+                                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 dark:peer-focus:ring-orange-800 rounded-full peer dark:bg-zinc-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-zinc-600 peer-checked:bg-orange-500"></div>
                                                     </label>
                                                 </div>
                                             </div>
                                         </div>
 
                                         {/* Account Actions */}
-                                        <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6">
-                                            <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Account Actions</h4>
+                                        <div className="bg-gray-50 dark:bg-zinc-800 rounded-xl p-6">
+                                            <h4 className="text-lg font-semibold text-gray-900 dark:text-zinc-50 mb-4">Account Actions</h4>
                                             <div className="space-y-3">
                                                 <button className="w-full text-left p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors">
                                                     Change Password

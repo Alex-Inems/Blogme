@@ -6,12 +6,12 @@ import { SignedIn, SignInButton, SignedOut, useUser } from '@clerk/nextjs';
 import { usePathname } from 'next/navigation';
 import { NAV_LINKS, COMPANY_INFO } from '@/Commons/constants';
 import { cn } from '@/lib/utils';
-import MobileNav from './Mobilenav';
-import { FiHome, FiEdit3, FiBookOpen, FiUser, FiMenu, FiX } from 'react-icons/fi';
+import { FiUser, FiMenu, FiX } from 'react-icons/fi';
 import { db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import Image from 'next/image';
 import DarkModeToggle from './DarkModeToggle';
+import NotificationsDropdown from './NotificationsDropdown';
 
 const Navbar = () => {
     const pathname = usePathname();
@@ -64,8 +64,8 @@ const Navbar = () => {
     return (
         <>
             <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
-                ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-lg'
-                : 'bg-white dark:bg-gray-900'
+                ? 'bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md shadow-lg'
+                : 'bg-white dark:bg-zinc-900'
                 }`}>
                 <div className="w-full px-1">
                     <div className="flex justify-between items-center h-16">
@@ -74,38 +74,79 @@ const Navbar = () => {
                             <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
                                 <span className="text-white font-bold text-sm">B</span>
                             </div>
-                            <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                            <span className="text-2xl font-bold text-gray-900 dark:text-zinc-50">
                                 {COMPANY_INFO.name}
                             </span>
                         </Link>
 
                         {/* Desktop Navigation */}
                         <div className="hidden md:flex items-center space-x-8">
-                            {NAV_LINKS.map((link) => (
-                                <Link
-                                    key={link.path}
-                                    href={link.path}
-                                    className={cn(
-                                        'px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200',
-                                        isActive(link.path)
-                                            ? 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20'
-                                            : 'text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-gray-50 dark:hover:bg-gray-800'
+                            {/* Context-aware navigation links */}
+                            {pathname === '/create' ? (
+                                // Create page: Show simplified navigation
+                                <>
+                                    <Link
+                                        href="/"
+                                        className={cn(
+                                            'px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200',
+                                            'text-gray-700 dark:text-zinc-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-gray-50 dark:hover:bg-zinc-800'
+                                        )}
+                                    >
+                                        Home
+                                    </Link>
+                                    <Link
+                                        href="/stories"
+                                        className={cn(
+                                            'px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200',
+                                            'text-gray-700 dark:text-zinc-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-gray-50 dark:hover:bg-zinc-800'
+                                        )}
+                                    >
+                                        My Stories
+                                    </Link>
+                                </>
+                            ) : (
+                                // All other pages: Show full navigation
+                                <>
+                                    {NAV_LINKS.map((link) => (
+                                        <Link
+                                            key={link.path}
+                                            href={link.path}
+                                            className={cn(
+                                                'px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200',
+                                                isActive(link.path)
+                                                    ? 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30'
+                                                    : 'text-gray-700 dark:text-zinc-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-gray-50 dark:hover:bg-zinc-800'
+                                            )}
+                                        >
+                                            {link.label}
+                                        </Link>
+                                    ))}
+                                    <Link
+                                        href="/leaderboard"
+                                        className={cn(
+                                            'px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200',
+                                            isActive('/leaderboard')
+                                                ? 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30'
+                                                : 'text-gray-700 dark:text-zinc-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-gray-50 dark:hover:bg-zinc-800'
+                                        )}
+                                    >
+                                        Leaderboard
+                                    </Link>
+                                    {user && (
+                                        <Link
+                                            href="/create"
+                                            className={cn(
+                                                'px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200',
+                                                isActive('/create')
+                                                    ? 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30'
+                                                    : 'text-gray-700 dark:text-zinc-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-gray-50 dark:hover:bg-zinc-800'
+                                            )}
+                                        >
+                                            Create Post
+                                        </Link>
                                     )}
-                                >
-                                    {link.label}
-                                </Link>
-                            ))}
-                            <Link
-                                href="/leaderboard"
-                                className={cn(
-                                    'px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200',
-                                    isActive('/leaderboard')
-                                        ? 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20'
-                                        : 'text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-gray-50 dark:hover:bg-gray-800'
-                                )}
-                            >
-                                Leaderboard
-                            </Link>
+                                </>
+                            )}
                         </div>
 
                         {/* Right side actions */}
@@ -125,6 +166,9 @@ const Navbar = () => {
 
                                 <SignedIn>
                                     <div className="flex items-center space-x-3">
+                                        {/* Notifications */}
+                                        <NotificationsDropdown />
+
                                         {/* Profile Image */}
                                         {profileImageUrl ? (
                                             <Link href="/profile" className="flex-shrink-0">
@@ -138,8 +182,10 @@ const Navbar = () => {
                                             </Link>
                                         ) : (
                                             <Link href="/profile" className="flex-shrink-0">
-                                                <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
-                                                    <FiUser className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center border-2 border-orange-200 hover:border-orange-300 transition-colors duration-200">
+                                                    <span className="text-white font-bold text-xs">
+                                                        {user?.fullName?.charAt(0) || user?.username?.charAt(0) || 'U'}
+                                                    </span>
                                                 </div>
                                             </Link>
                                         )}
@@ -147,7 +193,7 @@ const Navbar = () => {
                                         {/* Desktop Profile Link */}
                                         <Link
                                             href="/profile"
-                                            className="hidden sm:inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 transition-colors duration-200"
+                                            className="hidden sm:inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-zinc-300 hover:text-orange-600 dark:hover:text-orange-400 transition-colors duration-200"
                                         >
                                             Profile
                                         </Link>
@@ -157,7 +203,7 @@ const Navbar = () => {
                                 {/* Mobile Menu Button */}
                                 <button
                                     onClick={toggleMobileMenu}
-                                    className="md:hidden p-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
+                                    className="md:hidden p-2 rounded-md text-gray-700 dark:text-zinc-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors duration-200"
                                     aria-label="Toggle mobile menu"
                                 >
                                     {isMobileMenuOpen ? (
@@ -173,26 +219,73 @@ const Navbar = () => {
 
                 {/* Mobile Menu */}
                 {isMobileMenuOpen && (
-                    <div className="md:hidden bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+                    <div className="md:hidden bg-white dark:bg-zinc-900 border-t border-gray-200 dark:border-zinc-800">
                         <div className="px-2 pt-2 pb-3 space-y-1">
-                            {NAV_LINKS.map((link) => (
-                                <Link
-                                    key={link.path}
-                                    href={link.path}
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                    className={cn(
-                                        'block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200',
-                                        isActive(link.path)
-                                            ? 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20'
-                                            : 'text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-gray-50 dark:hover:bg-gray-800'
+                            {pathname === '/create' ? (
+                                <>
+                                    <Link
+                                        href="/"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-zinc-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors duration-200"
+                                    >
+                                        Home
+                                    </Link>
+                                    <Link
+                                        href="/stories"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-zinc-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors duration-200"
+                                    >
+                                        My Stories
+                                    </Link>
+                                </>
+                            ) : (
+                                <>
+                                    {NAV_LINKS.map((link) => (
+                                        <Link
+                                            key={link.path}
+                                            href={link.path}
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                            className={cn(
+                                                'block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200',
+                                                isActive(link.path)
+                                                    ? 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30'
+                                                    : 'text-gray-700 dark:text-zinc-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-gray-50 dark:hover:bg-zinc-800'
+                                            )}
+                                        >
+                                            {link.label}
+                                        </Link>
+                                    ))}
+                                    <Link
+                                        href="/leaderboard"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                        className={cn(
+                                            'block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200',
+                                            isActive('/leaderboard')
+                                                ? 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30'
+                                                : 'text-gray-700 dark:text-zinc-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-gray-50 dark:hover:bg-zinc-800'
+                                        )}
+                                    >
+                                        Leaderboard
+                                    </Link>
+                                    {user && (
+                                        <Link
+                                            href="/create"
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                            className={cn(
+                                                'block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200',
+                                                isActive('/create')
+                                                    ? 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30'
+                                                    : 'text-gray-700 dark:text-zinc-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-gray-50 dark:hover:bg-zinc-800'
+                                            )}
+                                        >
+                                            Create Post
+                                        </Link>
                                     )}
-                                >
-                                    {link.label}
-                                </Link>
-                            ))}
+                                </>
+                            )}
 
                             <SignedOut>
-                                <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                                <div className="pt-4 border-t border-gray-200 dark:border-zinc-800">
                                     <SignInButton mode="modal">
                                         <button
                                             onClick={() => setIsMobileMenuOpen(false)}
@@ -209,7 +302,7 @@ const Navbar = () => {
                                     <Link
                                         href="/profile"
                                         onClick={() => setIsMobileMenuOpen(false)}
-                                        className="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-200"
+                                        className="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-zinc-300 hover:text-orange-600 dark:hover:text-orange-400 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors duration-200"
                                     >
                                         <FiUser className="w-5 h-5 mr-3" />
                                         Profile

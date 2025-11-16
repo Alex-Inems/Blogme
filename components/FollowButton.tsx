@@ -1,61 +1,118 @@
-// FollowButton.tsx
+'use client';
 
-import { useEffect, useState } from 'react';
-import { followUser, unfollowUser, checkIfFollowing } from '../lib/userFollowUtils'; // Adjust the import path
+import { useState, useEffect } from 'react';
+import { useUser } from '@clerk/nextjs';
+import { followUser, unfollowUser, isFollowing } from '@/lib/userFollowUtils';
+import { createNotification } from '@/lib/notifications';
+import { toast } from 'sonner';
+import { FiUserPlus, FiUserCheck } from 'react-icons/fi';
 
 interface FollowButtonProps {
-  authorId: string;
-  currentUser: { id: string } | null; // Define your currentUser type appropriately
+  userId: string;
+  userName: string;
+  className?: string;
 }
 
-const FollowButton: React.FC<FollowButtonProps> = ({ authorId, currentUser }) => {
-  const [isFollowing, setIsFollowing] = useState(false);
+const FollowButton = ({ userId, userName, className = '' }: FollowButtonProps) => {
+  const { user } = useUser();
+  const [following, setFollowing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    const fetchFollowingStatus = async () => {
-      if (currentUser) {
-        const followingStatus = await checkIfFollowing(currentUser.id, authorId);
-        setIsFollowing(followingStatus);
+    const checkFollowStatus = async () => {
+      if (!user || !userId || user.id === userId) {
+        setChecking(false);
+        return;
+      }
+
+      try {
+        const status = await isFollowing(user.id, userId);
+        setFollowing(status);
+      } catch (error) {
+        console.error('Error checking follow status:', error);
+      } finally {
+        setChecking(false);
       }
     };
 
-    fetchFollowingStatus();
-  }, [currentUser, authorId]);
+    checkFollowStatus();
+  }, [user, userId]);
 
   const handleFollow = async () => {
-    if (currentUser) {
-      setIsFollowing(true); // Optimistically update the UI
-      setLoading(true);
-      try {
-        await followUser(currentUser.id, authorId);
-      } catch (error) {
-        console.error("Error following user:", error);
-        setIsFollowing(false); // Rollback on error
-      } finally {
-        setLoading(false);
+    if (!user) {
+      toast.info('Sign in required', {
+        description: 'Please sign in to follow users.',
+      });
+      return;
+    }
+
+    if (user.id === userId) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      if (following) {
+        await unfollowUser(user.id, userId);
+        setFollowing(false);
+        toast.success('Unfollowed', {
+          description: `You've unfollowed ${userName}.`,
+        });
+      } else {
+        await followUser(user.id, userId);
+        setFollowing(true);
+
+        // Create notification
+        try {
+          await createNotification(
+            userId,
+            'follow',
+            `${user.fullName || user.username} started following you`,
+            user.id
+          );
+        } catch (notifError) {
+          console.error('Error creating notification:', notifError);
+        }
+
+        toast.success('Following', {
+          description: `You're now following ${userName}.`,
+        });
       }
+    } catch (error: any) {
+      console.error('Error toggling follow:', error);
+      toast.error('Error', {
+        description: error.message || 'Failed to update follow status.',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleUnfollow = async () => {
-    if (currentUser) {
-      setIsFollowing(false); // Optimistically update the UI
-      setLoading(true);
-      try {
-        await unfollowUser(currentUser.id, authorId);
-      } catch (error) {
-        console.error("Error unfollowing user:", error);
-        setIsFollowing(true); // Rollback on error
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
+  if (!user || user.id === userId || checking) {
+    return null;
+  }
 
   return (
-    <button  className='text-green-600' onClick={isFollowing ? handleUnfollow : handleFollow} disabled={loading}>
-      {loading ? 'Loading...' : isFollowing ? 'Following' : 'Follow'}
+    <button
+      onClick={handleFollow}
+      disabled={loading}
+      className={`${className} ${following
+          ? 'bg-gray-200 dark:bg-zinc-800 hover:bg-gray-300 dark:hover:bg-zinc-700 text-gray-900 dark:text-zinc-50'
+          : 'bg-orange-500 hover:bg-orange-600 text-white'
+        } px-4 py-2 rounded-lg font-semibold transition-colors duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
+    >
+      {following ? (
+        <>
+          <FiUserCheck className="w-4 h-4" />
+          Following
+        </>
+      ) : (
+        <>
+          <FiUserPlus className="w-4 h-4" />
+          Follow
+        </>
+      )}
     </button>
   );
 };

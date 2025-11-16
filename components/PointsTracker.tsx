@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useUser } from '@clerk/nextjs';
-import { addPointsForReading, getUserPoints, getUnlockedAchievements, getLevelInfo, getNextMilestone, type UserPoints, type Achievement } from '@/lib/pointsSystem';
-import { FiStar, FiTrendingUp, FiAward, FiTarget } from 'react-icons/fi';
+import { addPointsForReading, getLevelInfo, getNextMilestone, type UserPoints, type Achievement } from '@/lib/pointsSystem';
+import { FiStar, FiTrendingUp, FiAward } from 'react-icons/fi';
 
 interface PointsTrackerProps {
     postId: string;
@@ -18,13 +18,7 @@ const PointsTracker = ({ postId, onPointsUpdate }: PointsTrackerProps) => {
     const [isLevelUp, setIsLevelUp] = useState(false);
     const [hasRead, setHasRead] = useState(false);
 
-    useEffect(() => {
-        if (user && !hasRead) {
-            trackReading();
-        }
-    }, [user, postId]);
-
-    const trackReading = async () => {
+    const trackReading = useCallback(async () => {
         if (!user || hasRead) return;
 
         try {
@@ -58,7 +52,13 @@ const PointsTracker = ({ postId, onPointsUpdate }: PointsTrackerProps) => {
         } catch (error) {
             console.error('Error tracking reading:', error);
         }
-    };
+    }, [user, postId, hasRead, onPointsUpdate]);
+
+    useEffect(() => {
+        if (user && !hasRead) {
+            trackReading();
+        }
+    }, [user, postId, hasRead, trackReading]);
 
     const nextMilestone = userPoints ? getNextMilestone(userPoints.totalPoints) : null;
     const levelInfo = userPoints ? getLevelInfo(userPoints.level) : null;
@@ -137,7 +137,7 @@ const PointsTracker = ({ postId, onPointsUpdate }: PointsTrackerProps) => {
                         <FiAward className="w-6 h-6 text-white" />
                         <div>
                             <h4 className="font-bold text-white">Level Up!</h4>
-                            <p className="text-sm text-orange-100">You've reached Level {userPoints.level}!</p>
+                            <p className="text-sm text-orange-100">You&apos;ve reached Level {userPoints.level}!</p>
                         </div>
                     </div>
                 </div>
@@ -147,5 +147,6 @@ const PointsTracker = ({ postId, onPointsUpdate }: PointsTrackerProps) => {
 };
 
 export default PointsTracker;
+
 
 

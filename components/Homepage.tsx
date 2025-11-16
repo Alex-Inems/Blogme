@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
-import { collection, query, orderBy, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { PostListSkeleton } from '@/components/LoadingSkeleton';
 import Image from 'next/image';
 import Link from 'next/link';
 import NewsletterForm from './NewsletterForm';
@@ -33,19 +34,28 @@ const Homepage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
   const postsPerPage = 6;
+  const [hasMore, setHasMore] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [selectedTag, setSelectedTag] = useState<string>('');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'popular'>('newest');
 
   useEffect(() => {
     const fetchPosts = async () => {
       try {
+        setLoading(true);
         const postsRef = collection(db, 'posts');
-        const q = query(postsRef, orderBy('createdAt', 'desc'));
+        // Only fetch published posts
+        const q = query(postsRef, orderBy('createdAt', 'desc'), limit(100));
         const querySnapshot = await getDocs(q);
-        const postsData = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        })) as Post[];
+        const postsData = (querySnapshot.docs
+          .map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          })) as Post[])
+          .filter(post => post.published !== false); // Only show published posts
         setPosts(postsData);
         setFilteredPosts(postsData);
+        setHasMore(querySnapshot.docs.length === 100);
       } catch (error) {
         console.error('Error fetching posts:', error);
       } finally {
@@ -63,18 +73,47 @@ const Homepage = () => {
   }, [user]);
 
   useEffect(() => {
-    if (searchTerm.trim() === '') {
-      setFilteredPosts(posts);
-    } else {
-      const filtered = posts.filter(post =>
+    let filtered = [...posts];
+
+    // Filter by search term
+    if (searchTerm.trim() !== '') {
+      filtered = filtered.filter(post =>
         post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         post.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post.content.toLowerCase().includes(searchTerm.toLowerCase())
+        post.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        post.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
       );
-      setFilteredPosts(filtered);
     }
+
+    // Filter by category
+    if (selectedCategory) {
+      filtered = filtered.filter(post => post.category === selectedCategory);
+    }
+
+    // Filter by tag
+    if (selectedTag) {
+      filtered = filtered.filter(post =>
+        post.tags?.some(tag => tag.toLowerCase() === selectedTag.toLowerCase())
+      );
+    }
+
+    // Sort posts
+    filtered.sort((a, b) => {
+      if (sortBy === 'newest') {
+        return b.createdAt.toDate().getTime() - a.createdAt.toDate().getTime();
+      } else if (sortBy === 'oldest') {
+        return a.createdAt.toDate().getTime() - b.createdAt.toDate().getTime();
+      } else if (sortBy === 'popular') {
+        const aLikes = a.likes || 0;
+        const bLikes = b.likes || 0;
+        return bLikes - aLikes;
+      }
+      return 0;
+    });
+
+    setFilteredPosts(filtered);
     setCurrentPage(1);
-  }, [searchTerm, posts]);
+  }, [searchTerm, posts, selectedCategory, selectedTag, sortBy]);
 
   const handleSearch = () => {
     // Search is handled by useEffect
@@ -89,21 +128,26 @@ const Homepage = () => {
   const indexOfLastPost = currentPage * postsPerPage;
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
   const currentPosts = filteredPosts.slice(indexOfFirstPost, indexOfLastPost);
-  const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
+  // const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-slate-900">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading stories...</p>
+      <div className="min-h-screen bg-gray-50 dark:bg-zinc-950 py-12">
+        <div className="w-full px-1">
+          <div className="max-w-6xl mx-auto">
+            <div className="mb-8 space-y-4">
+              <div className="h-12 bg-gray-200 dark:bg-zinc-800 rounded-lg w-3/4 mx-auto animate-pulse"></div>
+              <div className="h-6 bg-gray-200 dark:bg-zinc-800 rounded-lg w-1/2 mx-auto animate-pulse"></div>
+            </div>
+            <PostListSkeleton count={6} />
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-zinc-950">
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-orange-500 via-orange-600 to-red-600 text-white py-16 lg:py-24">
         <div className="absolute inset-0 bg-black/20"></div>
@@ -114,7 +158,7 @@ const Homepage = () => {
             </h1>
             <p className="text-xl sm:text-2xl mb-8 text-orange-100 max-w-3xl mx-auto leading-relaxed">
               Connect, inspire, and discover amazing stories from writers around the globe.
-              Your voice matters, and we're here to amplify it.
+              Your voice matters, and we&apos;re here to amplify it.
             </p>
 
             {/* Search Bar */}
@@ -191,31 +235,31 @@ const Homepage = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-12 bg-white dark:bg-gray-800">
+      <section className="py-12 bg-white dark:bg-zinc-900">
         <div className="w-full px-1">
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
               <div>
                 <div className="text-3xl font-bold text-orange-600 mb-2">{filteredPosts.length}</div>
-                <div className="text-gray-600 dark:text-gray-400">Stories Published</div>
+                <div className="text-gray-600 dark:text-zinc-400">Stories Published</div>
               </div>
               <div>
                 <div className="text-3xl font-bold text-orange-600 mb-2">
                   {filteredPosts.reduce((sum, post) => sum + (post.views || 0), 0).toLocaleString()}
                 </div>
-                <div className="text-gray-600 dark:text-gray-400">Total Views</div>
+                <div className="text-gray-600 dark:text-zinc-400">Total Views</div>
               </div>
               <div>
                 <div className="text-3xl font-bold text-orange-600 mb-2">
                   {filteredPosts.reduce((sum, post) => sum + (post.likes || 0), 0).toLocaleString()}
                 </div>
-                <div className="text-gray-600 dark:text-gray-400">Likes Received</div>
+                <div className="text-gray-600 dark:text-zinc-400">Likes Received</div>
               </div>
               <div>
                 <div className="text-3xl font-bold text-orange-600 mb-2">
                   {new Set(filteredPosts.map(post => post.author)).size}
                 </div>
-                <div className="text-gray-600 dark:text-gray-400">Active Writers</div>
+                <div className="text-gray-600 dark:text-zinc-400">Active Writers</div>
               </div>
             </div>
           </div>
@@ -223,21 +267,21 @@ const Homepage = () => {
       </section>
 
       {/* Featured Posts Section */}
-      <section className="py-16 bg-gray-50 dark:bg-slate-900">
+      <section className="py-16 bg-gray-50 dark:bg-zinc-950">
         <div className="w-full px-1">
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
-              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-zinc-50 mb-4">
                 Featured Stories
               </h2>
-              <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+              <p className="text-xl text-gray-600 dark:text-zinc-400 max-w-2xl mx-auto">
                 Discover the most engaging and popular stories from our community
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {currentPosts.slice(0, 6).map((post, index) => (
-                <article key={post.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
+                <article key={post.id} className="bg-white dark:bg-zinc-900 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group">
                   <Link href={`/blog/${post.slug || post.id}`}>
                     <div className="relative">
                       {post.imageUrl ? (
@@ -280,23 +324,23 @@ const Homepage = () => {
                             </span>
                           </div>
                         )}
-                        <span className="text-sm text-gray-600 dark:text-gray-400">{post.author}</span>
-                        <span className="text-gray-400">•</span>
-                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                        <span className="text-sm text-gray-600 dark:text-zinc-400">{post.author}</span>
+                        <span className="text-gray-400 dark:text-zinc-500">•</span>
+                        <span className="text-sm text-gray-600 dark:text-zinc-400">
                           {post.createdAt.toDate().toLocaleDateString()}
                         </span>
                       </div>
 
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 line-clamp-2 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors duration-200">
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-zinc-50 mb-3 line-clamp-2 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors duration-200">
                         {post.title}
                       </h3>
 
-                      <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-3" dangerouslySetInnerHTML={{
+                      <p className="text-gray-600 dark:text-zinc-400 mb-4 line-clamp-3" dangerouslySetInnerHTML={{
                         __html: post.content.replace(/<[^>]*>/g, '').slice(0, 120) + '...'
                       }}></p>
 
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-zinc-400">
                           <span className="flex items-center">
                             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -336,7 +380,7 @@ const Homepage = () => {
       </section>
 
       {/* Newsletter Section */}
-      <section className="py-16 bg-white dark:bg-gray-800">
+      <section className="py-16 bg-white dark:bg-zinc-900">
         <div className="w-full px-1">
           <div className="max-w-4xl mx-auto">
             <NewsletterForm />

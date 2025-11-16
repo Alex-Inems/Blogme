@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { getDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { db, storage } from '@/lib/firebase';
+import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { uploadImage } from '@/lib/cloudinary-upload';
+import { toast } from 'sonner';
 import Image from 'next/image'; // Import Image from next/image
 
 const EditPost = ({ params }: { params: { id: string } }) => {
@@ -64,9 +65,7 @@ const EditPost = ({ params }: { params: { id: string } }) => {
 
       // If a new image is uploaded, handle the upload
       if (imageFile) {
-        const storageRef = ref(storage, `images/${imageFile.name}`);
-        await uploadBytes(storageRef, imageFile);
-        newImageUrl = await getDownloadURL(storageRef);
+        newImageUrl = await uploadImage(imageFile, 'images');
       }
 
       await updateDoc(postRef, {
@@ -74,19 +73,35 @@ const EditPost = ({ params }: { params: { id: string } }) => {
         content,
         imageUrl: newImageUrl, // Update the image URL if a new one is uploaded
       });
+      toast.success('Post updated', {
+        description: 'Your changes have been saved successfully.',
+      });
       router.push(`/post/${id}`);
     } catch (error) {
       console.error('Error updating post:', error);
+      toast.error('Error updating post', {
+        description: 'Please try again. If the problem persists, contact support.',
+      });
     }
   };
 
   const handleDeletePost = async () => {
+    if (!confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
+      return;
+    }
+
     const postRef = doc(db, 'posts', id);
     try {
       await deleteDoc(postRef);
+      toast.success('Post deleted', {
+        description: 'Your post has been permanently deleted.',
+      });
       router.push('/'); // Redirect to homepage after deletion
     } catch (error) {
       console.error('Error deleting post:', error);
+      toast.error('Error deleting post', {
+        description: 'Please try again. If the problem persists, contact support.',
+      });
     }
   };
 
