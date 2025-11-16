@@ -1,9 +1,22 @@
 'use client';
 
+interface Post {
+    title?: string;
+    content?: string;
+    author?: string;
+    category?: string;
+    tags?: string[];
+    createdAt?: { toDate: () => Date } | string | number;
+    published?: boolean;
+    readingTime?: number;
+    views?: number;
+    likes?: number;
+}
+
 /**
  * Export posts to JSON format
  */
-export function exportPostsToJSON(posts: any[], filename: string = 'posts.json'): void {
+export function exportPostsToJSON(posts: Post[], filename: string = 'posts.json'): void {
     const dataStr = JSON.stringify(posts, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(dataBlob);
@@ -19,7 +32,7 @@ export function exportPostsToJSON(posts: any[], filename: string = 'posts.json')
 /**
  * Export posts to CSV format
  */
-export function exportPostsToCSV(posts: any[], filename: string = 'posts.csv'): void {
+export function exportPostsToCSV(posts: Post[], filename: string = 'posts.csv'): void {
     if (posts.length === 0) {
         return;
     }
@@ -67,8 +80,8 @@ export function exportPostsToCSV(posts: any[], filename: string = 'posts.csv'): 
 /**
  * Export posts to Markdown format
  */
-export function exportPostsToMarkdown(posts: any[], filename: string = 'posts.md'): void {
-    const markdown = posts.map((post, index) => {
+export function exportPostsToMarkdown(posts: Post[], filename: string = 'posts.md'): void {
+    const markdown = posts.map((post) => {
         const createdDate = post.createdAt?.toDate ? post.createdAt.toDate().toISOString() : new Date(post.createdAt || Date.now()).toISOString();
         const tags = Array.isArray(post.tags) ? post.tags.map((t: string) => `#${t}`).join(' ') : '';
 

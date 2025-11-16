@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useUser } from '@clerk/nextjs';
-import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead, getUnreadNotificationCount } from '@/lib/notifications';
+import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead, getUnreadNotificationCount, Notification } from '@/lib/notifications';
 import { FiBell, FiX } from 'react-icons/fi';
 import Link from 'next/link';
 
 const NotificationsDropdown = () => {
     const { user } = useUser();
-    const [notifications, setNotifications] = useState<any[]>([]);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
     const [isOpen, setIsOpen] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(false);

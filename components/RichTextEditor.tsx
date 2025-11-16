@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import dynamic from 'next/dynamic';
 import 'react-quill/dist/quill.snow.css';
 
@@ -8,54 +8,60 @@ import 'react-quill/dist/quill.snow.css';
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
 interface RichTextEditorProps {
-    value: string;
-    onChange: (value: string) => void;
-    placeholder?: string;
-    className?: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  className?: string;
+}
+
+interface ReactQuillInstance {
+  getEditor: () => {
+    root: HTMLElement;
+  };
 }
 
 const RichTextEditor = ({ value, onChange, placeholder, className = '' }: RichTextEditorProps) => {
-    const quillRef = useRef<any>(null);
+  const quillRef = useRef<ReactQuillInstance | null>(null);
 
-    const modules = {
-        toolbar: [
-            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-            [{ 'font': [] }],
-            [{ 'size': ['small', false, 'large', 'huge'] }],
-            ['bold', 'italic', 'underline', 'strike', 'blockquote'],
-            [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
-            [{ 'color': [] }, { 'background': [] }],
-            [{ 'align': [] }],
-            ['link', 'image', 'video'],
-            ['clean']
-        ],
-        clipboard: {
-            matchVisual: false,
-        },
-    };
+  const modules = {
+    toolbar: [
+      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+      [{ 'font': [] }],
+      [{ 'size': ['small', false, 'large', 'huge'] }],
+      ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
+      [{ 'color': [] }, { 'background': [] }],
+      [{ 'align': [] }],
+      ['link', 'image', 'video'],
+      ['clean']
+    ],
+    clipboard: {
+      matchVisual: false,
+    },
+  };
 
-    const formats = [
-        'header', 'font', 'size',
-        'bold', 'italic', 'underline', 'strike', 'blockquote',
-        'list', 'bullet', 'indent',
-        'color', 'background',
-        'align',
-        'link', 'image', 'video'
-    ];
+  const formats = [
+    'header', 'font', 'size',
+    'bold', 'italic', 'underline', 'strike', 'blockquote',
+    'list', 'bullet', 'indent',
+    'color', 'background',
+    'align',
+    'link', 'image', 'video'
+  ];
 
-    return (
-        <div className={`rich-text-editor ${className}`}>
-            <ReactQuill
-                ref={quillRef}
-                theme="snow"
-                value={value}
-                onChange={onChange}
-                modules={modules}
-                formats={formats}
-                placeholder={placeholder || 'Write your content here...'}
-                className="bg-white dark:bg-zinc-900"
-            />
-            <style jsx global>{`
+  return (
+    <div className={`rich-text-editor ${className}`}>
+      <ReactQuill
+        ref={quillRef}
+        theme="snow"
+        value={value}
+        onChange={onChange}
+        modules={modules}
+        formats={formats}
+        placeholder={placeholder || 'Write your content here...'}
+        className="bg-white dark:bg-zinc-900"
+      />
+      <style jsx global>{`
         .rich-text-editor .ql-container {
           min-height: 300px;
           font-size: 16px;
@@ -112,8 +118,8 @@ const RichTextEditor = ({ value, onChange, placeholder, className = '' }: RichTe
           color: #71717a;
         }
       `}</style>
-        </div>
-    );
+    </div>
+  );
 };
 
 export default RichTextEditor;

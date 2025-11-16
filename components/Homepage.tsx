@@ -34,10 +34,9 @@ const Homepage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
   const postsPerPage = 6;
-  const [hasMore, setHasMore] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [selectedTag, setSelectedTag] = useState<string>('');
-  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'popular'>('newest');
+  const [selectedCategory] = useState<string>('');
+  const [selectedTag] = useState<string>('');
+  const [sortBy] = useState<'newest' | 'oldest' | 'popular'>('newest');
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -55,7 +54,6 @@ const Homepage = () => {
           .filter(post => post.published !== false); // Only show published posts
         setPosts(postsData);
         setFilteredPosts(postsData);
-        setHasMore(querySnapshot.docs.length === 100);
       } catch (error) {
         console.error('Error fetching posts:', error);
       } finally {

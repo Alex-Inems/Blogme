@@ -10,7 +10,6 @@ import { toast } from 'sonner';
 import { FiDownload, FiFileText, FiFile, FiCode, FiEdit3, FiTrash2, FiEye, FiCalendar, FiClock, FiTag, FiMoreVertical, FiCheckCircle, FiFileMinus, FiSearch, FiFilter } from 'react-icons/fi';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
 import { deleteDoc, doc } from 'firebase/firestore';
 
 interface Post {
@@ -33,7 +32,6 @@ interface Post {
 
 const StoriesPage: React.FC = () => {
   const { user, isLoaded } = useUser();
-  const router = useRouter();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');

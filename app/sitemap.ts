@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
 import { db } from '@/lib/firebase';
-import { collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore';
+import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://blogme.africa';

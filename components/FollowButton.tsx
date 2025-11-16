@@ -79,10 +79,11 @@ const FollowButton = ({ userId, userName, className = '' }: FollowButtonProps) =
           description: `You're now following ${userName}.`,
         });
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error toggling follow:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update follow status.';
       toast.error('Error', {
-        description: error.message || 'Failed to update follow status.',
+        description: errorMessage,
       });
     } finally {
       setLoading(false);
@@ -98,8 +99,8 @@ const FollowButton = ({ userId, userName, className = '' }: FollowButtonProps) =
       onClick={handleFollow}
       disabled={loading}
       className={`${className} ${following
-          ? 'bg-gray-200 dark:bg-zinc-800 hover:bg-gray-300 dark:hover:bg-zinc-700 text-gray-900 dark:text-zinc-50'
-          : 'bg-orange-500 hover:bg-orange-600 text-white'
+        ? 'bg-gray-200 dark:bg-zinc-800 hover:bg-gray-300 dark:hover:bg-zinc-700 text-gray-900 dark:text-zinc-50'
+        : 'bg-orange-500 hover:bg-orange-600 text-white'
         } px-4 py-2 rounded-lg font-semibold transition-colors duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
     >
       {following ? (

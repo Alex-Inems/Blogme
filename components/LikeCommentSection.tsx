@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useUser } from '@clerk/nextjs';
+import Image from 'next/image';
+import { toast } from 'sonner';
 
 interface Comment {
     id: string;
@@ -126,9 +128,11 @@ const LikeCommentSection = ({ postId, initialLikes, authorImage }: LikeCommentSe
                         <form onSubmit={handleCommentSubmit} className="flex space-x-3">
                             <div className="flex-shrink-0">
                                 {user.imageUrl ? (
-                                    <img
+                                    <Image
                                         src={user.imageUrl}
                                         alt="Your profile"
+                                        width={32}
+                                        height={32}
                                         className="w-8 h-8 rounded-full"
                                     />
                                 ) : (
@@ -166,9 +170,11 @@ const LikeCommentSection = ({ postId, initialLikes, authorImage }: LikeCommentSe
                             <div key={comment.id} className="flex space-x-3">
                                 <div className="flex-shrink-0">
                                     {comment.authorImage ? (
-                                        <img
+                                        <Image
                                             src={comment.authorImage}
                                             alt={`${comment.author}'s profile`}
+                                            width={32}
+                                            height={32}
                                             className="w-8 h-8 rounded-full"
                                         />
                                     ) : (

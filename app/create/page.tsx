@@ -38,7 +38,6 @@ const CreatePost: React.FC = () => {
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [isDraft, setIsDraft] = useState(false);
   const [category, setCategory] = useState<string>('');
   const [tags, setTags] = useState<string>('');
   const [scheduledAt, setScheduledAt] = useState<string>('');

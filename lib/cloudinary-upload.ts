@@ -54,7 +54,7 @@ export const uploadImage = async (
                     } else {
                         reject(new Error('Upload succeeded but no URL returned'));
                     }
-                } catch (parseError) {
+                } catch {
                     reject(new Error('Failed to parse upload response'));
                 }
             } else {
@@ -127,7 +127,7 @@ export const uploadVideo = async (
                     } else {
                         reject(new Error('Upload succeeded but no URL returned'));
                     }
-                } catch (parseError) {
+                } catch {
                     reject(new Error('Failed to parse upload response'));
                 }
             } else {
@@ -147,6 +147,12 @@ export const uploadVideo = async (
         xhr.addEventListener('abort', () => {
             reject(new Error('Upload aborted'));
         });
+
+        const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+        if (!cloudName) {
+            reject(new Error('Cloudinary cloud name is missing'));
+            return;
+        }
 
         xhr.open('POST', `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`);
         xhr.send(formData);

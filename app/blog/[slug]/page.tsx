@@ -10,7 +10,6 @@ import LikeCommentSection from '@/components/LikeCommentSection';
 import BlogSidebar from '@/components/BlogSidebar';
 import { PostDetailSkeleton } from '@/components/LoadingSkeleton';
 import StructuredData from '@/components/StructuredData';
-import FollowButton from '@/components/FollowButton';
 // import PointsTracker from '@/components/PointsTracker';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -90,7 +89,7 @@ const PostPage = ({ params }: PostPageProps) => {
             toast.success('Link copied!', {
                 description: 'Post link has been copied to your clipboard.',
             });
-        } catch (error) {
+        } catch {
             toast.error('Failed to copy', {
                 description: 'Please try copying the link manually.',
             });
@@ -110,7 +109,7 @@ const PostPage = ({ params }: PostPageProps) => {
             <div className="min-h-screen bg-gray-50 dark:bg-zinc-950 flex items-center justify-center">
                 <div className="text-center">
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-50 mb-4">Post not found</h1>
-                    <p className="text-gray-600 dark:text-zinc-400 mb-6">The post you're looking for doesn't exist.</p>
+                    <p className="text-gray-600 dark:text-zinc-400 mb-6">The post you&apos;re looking for doesn&apos;t exist.</p>
                     <Link
                         href="/"
                         className="inline-block bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors"

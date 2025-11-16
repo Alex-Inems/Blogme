@@ -1,8 +1,32 @@
 'use client';
 
+interface ArticleData {
+    title: string;
+    description?: string;
+    image?: string;
+    publishedTime: string;
+    modifiedTime?: string;
+    author: string;
+    authorImage?: string;
+    url: string;
+    category?: string;
+    tags?: string[] | string;
+}
+
+interface BreadcrumbItem {
+    name: string;
+    url: string;
+}
+
+interface BreadcrumbData {
+    items: BreadcrumbItem[];
+}
+
+type StructuredDataType = ArticleData | Record<string, unknown> | BreadcrumbData;
+
 interface StructuredDataProps {
     type: 'Article' | 'Organization' | 'WebSite' | 'BreadcrumbList';
-    data: any;
+    data: StructuredDataType;
 }
 
 export default function StructuredData({ type, data }: StructuredDataProps) {
@@ -10,19 +34,20 @@ export default function StructuredData({ type, data }: StructuredDataProps) {
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://blogme.africa';
 
         switch (type) {
-            case 'Article':
+            case 'Article': {
+                const articleData = data as ArticleData;
                 return {
                     '@context': 'https://schema.org',
                     '@type': 'Article',
-                    headline: data.title,
-                    description: data.description,
-                    image: data.image || `${baseUrl}/og-image.jpg`,
-                    datePublished: data.publishedTime,
-                    dateModified: data.modifiedTime || data.publishedTime,
+                    headline: articleData.title,
+                    description: articleData.description,
+                    image: articleData.image || `${baseUrl}/og-image.jpg`,
+                    datePublished: articleData.publishedTime,
+                    dateModified: articleData.modifiedTime || articleData.publishedTime,
                     author: {
                         '@type': 'Person',
-                        name: data.author,
-                        image: data.authorImage,
+                        name: articleData.author,
+                        image: articleData.authorImage,
                     },
                     publisher: {
                         '@type': 'Organization',
@@ -34,11 +59,12 @@ export default function StructuredData({ type, data }: StructuredDataProps) {
                     },
                     mainEntityOfPage: {
                         '@type': 'WebPage',
-                        '@id': data.url,
+                        '@id': articleData.url,
                     },
-                    articleSection: data.category,
-                    keywords: Array.isArray(data.tags) ? data.tags.join(', ') : data.tags,
+                    articleSection: articleData.category,
+                    keywords: Array.isArray(articleData.tags) ? articleData.tags.join(', ') : articleData.tags,
                 };
+            }
 
             case 'Organization':
                 return {
@@ -76,7 +102,7 @@ export default function StructuredData({ type, data }: StructuredDataProps) {
                 return {
                     '@context': 'https://schema.org',
                     '@type': 'BreadcrumbList',
-                    itemListElement: data.items.map((item: any, index: number) => ({
+                    itemListElement: (data as BreadcrumbData).items.map((item: BreadcrumbItem, index: number) => ({
                         '@type': 'ListItem',
                         position: index + 1,
                         name: item.name,
