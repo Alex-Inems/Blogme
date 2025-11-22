@@ -23,6 +23,8 @@ interface Post {
   readingTime?: number;
   views?: number;
   likes?: number;
+  published?: boolean;
+  tags?: string[];
 }
 
 const Homepage = () => {
