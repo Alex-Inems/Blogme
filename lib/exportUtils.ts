@@ -13,6 +13,22 @@ interface Post {
     likes?: number;
 }
 
+// Type guard to check if createdAt has toDate method
+function hasToDate(value: { toDate: () => Date } | string | number | undefined): value is { toDate: () => Date } {
+    return value != null && typeof value === 'object' && 'toDate' in value && typeof (value as any).toDate === 'function';
+}
+
+// Helper function to convert createdAt to ISO string
+function getCreatedDateString(createdAt: { toDate: () => Date } | string | number | undefined): string {
+    if (hasToDate(createdAt)) {
+        return createdAt.toDate().toISOString();
+    } else if (createdAt) {
+        return new Date(createdAt).toISOString();
+    } else {
+        return new Date().toISOString();
+    }
+}
+
 /**
  * Export posts to JSON format
  */
@@ -46,7 +62,7 @@ export function exportPostsToCSV(posts: Post[], filename: string = 'posts.csv'):
             ? post.content.replace(/"/g, '""').replace(/\n/g, ' ').substring(0, 500) // Limit content length
             : '';
         const tags = Array.isArray(post.tags) ? post.tags.join('; ') : '';
-        const createdDate = post.createdAt?.toDate ? post.createdAt.toDate().toISOString() : new Date(post.createdAt || Date.now()).toISOString();
+        const createdDate = getCreatedDateString(post.createdAt);
 
         return [
             `"${(post.title || '').replace(/"/g, '""')}"`,
@@ -82,7 +98,7 @@ export function exportPostsToCSV(posts: Post[], filename: string = 'posts.csv'):
  */
 export function exportPostsToMarkdown(posts: Post[], filename: string = 'posts.md'): void {
     const markdown = posts.map((post) => {
-        const createdDate = post.createdAt?.toDate ? post.createdAt.toDate().toISOString() : new Date(post.createdAt || Date.now()).toISOString();
+        const createdDate = getCreatedDateString(post.createdAt);
         const tags = Array.isArray(post.tags) ? post.tags.map((t: string) => `#${t}`).join(' ') : '';
 
         return `# ${post.title || 'Untitled'}
