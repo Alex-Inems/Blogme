@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { COMPANY_INFO, SOCIAL_LINKS } from '@/Commons/constants';
 import { FiMail, FiPhone, FiMapPin, FiSend, FiClock, FiMessageCircle, FiUsers, FiHeart, FiStar, FiCheckCircle } from 'react-icons/fi';
+import { toast } from 'sonner';
 
 const ContactPage = () => {
     const [formData, setFormData] = useState({

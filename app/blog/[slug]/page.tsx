@@ -23,16 +23,23 @@ interface Post {
     authorId?: string; // Clerk user ID
     authorProfileImage: string;
     createdAt: { toDate: () => Date };
+    updatedAt?: { toDate: () => Date } | null;
     imageUrl: string;
     category: string;
     topic: string;
     readingTime: number;
     views: number;
     likes: number;
+    tags?: string[];
 }
 
 interface PostPageProps {
     params: { slug: string };
+}
+
+// Type guard to check if updatedAt exists and has toDate method
+function hasUpdatedAt(post: Post): post is Post & { updatedAt: { toDate: () => Date } } {
+    return post.updatedAt != null && typeof post.updatedAt.toDate === 'function';
 }
 
 const PostPage = ({ params }: PostPageProps) => {
@@ -128,7 +135,7 @@ const PostPage = ({ params }: PostPageProps) => {
         : 'Read this post on Blogme';
     const imageUrl = post.imageUrl || `${baseUrl}/og-image.jpg`;
     const publishedTime = post.createdAt.toDate().toISOString();
-    const modifiedTime = post.updatedAt?.toDate ? post.updatedAt.toDate().toISOString() : publishedTime;
+    const modifiedTime = hasUpdatedAt(post) ? post.updatedAt.toDate().toISOString() : publishedTime;
 
     return (
         <>

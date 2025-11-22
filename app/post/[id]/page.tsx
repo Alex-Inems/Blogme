@@ -17,6 +17,7 @@ interface Post {
   content: string;
   imageUrl?: string;
   author: string;
+  authorId?: string;
   authorProfileImage?: string;
   createdAt: { toDate: () => Date };
 }
@@ -138,10 +139,10 @@ const PostPage = ({ params }: PostPageProps) => {
                   <p className="text-sm font-bold text-center">{post.author}</p>
                 </div>
                 <p className="text-xs text-gray-500 text-center">Author details go here.</p>
-                {!isAuthor && user && post?.author && (
+                {!isAuthor && user && post?.authorId && (
                   <FollowButton
-                    authorId={post.author}
-                    currentUser={user}
+                    userId={post.authorId}
+                    userName={post.author}
                   />
                 )}
               </div>
@@ -152,8 +153,8 @@ const PostPage = ({ params }: PostPageProps) => {
             By {post?.author} on {post?.createdAt ? new Date(post.createdAt.toDate()).toLocaleDateString() : 'N/A'}
           </p>
 
-          {!isAuthor && user && post?.author && (
-            <FollowButton authorId={post.author} currentUser={user} />
+          {!isAuthor && user && post?.authorId && (
+            <FollowButton userId={post.authorId} userName={post.author} />
           )}
 
         </div>
