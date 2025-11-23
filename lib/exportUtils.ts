@@ -15,7 +15,11 @@ interface Post {
 
 // Type guard to check if createdAt has toDate method
 function hasToDate(value: { toDate: () => Date } | string | number | undefined): value is { toDate: () => Date } {
-    return value != null && typeof value === 'object' && 'toDate' in value && typeof (value as any).toDate === 'function';
+    if (value == null || typeof value !== 'object') {
+        return false;
+    }
+    const obj = value as Record<string, unknown>;
+    return 'toDate' in obj && typeof obj.toDate === 'function';
 }
 
 // Helper function to convert createdAt to ISO string
