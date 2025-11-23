@@ -1,5 +1,5 @@
 import { db } from './firebase';
-import { doc, getDoc, setDoc, updateDoc, increment, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, increment, collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
 
 export interface FollowData {
   followerId: string;
