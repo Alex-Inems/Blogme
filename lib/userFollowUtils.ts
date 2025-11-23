@@ -1,5 +1,5 @@
 import { db } from './firebase';
-import { doc, getDoc, setDoc, updateDoc, increment, collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, deleteDoc, increment, collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
 
 export interface FollowData {
   followerId: string;
@@ -80,7 +80,7 @@ export async function unfollowUser(followerId: string, followingId: string): Pro
   }
 
   // Delete follow relationship
-  await followRef.delete();
+  await deleteDoc(followRef);
 
   // Update follower's following count (with error handling)
   try {
