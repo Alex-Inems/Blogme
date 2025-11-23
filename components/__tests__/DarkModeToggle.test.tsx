@@ -35,9 +35,7 @@ describe('DarkModeToggle', () => {
 
   it('should render loading state initially', () => {
     const { container } = render(<DarkModeToggle />);
-    // In test environment, useEffect runs synchronously, so we check for the placeholder div
-    const placeholder = container.querySelector('.w-14.h-8');
-    // The component may render immediately in test, so we just verify it renders something
+    // In test environment, useEffect runs synchronously, so we just verify it renders something
     expect(container.firstChild).toBeInTheDocument();
   });
 

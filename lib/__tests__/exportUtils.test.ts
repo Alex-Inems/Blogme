@@ -4,7 +4,7 @@ import { exportPostsToJSON, exportPostsToCSV, exportPostsToMarkdown } from '../e
 beforeEach(() => {
   global.URL.createObjectURL = jest.fn(() => 'blob:mock-url');
   global.URL.revokeObjectURL = jest.fn();
-  global.Blob = jest.fn((content, options) => ({ content, options })) as any;
+  global.Blob = jest.fn((content: unknown, options?: BlobPropertyBag) => ({ content, options })) as jest.MockedClass<typeof Blob>;
   document.body.innerHTML = '';
   jest.clearAllMocks();
 });
