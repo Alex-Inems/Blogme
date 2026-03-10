@@ -128,7 +128,7 @@ const PostPage = ({ params }: PostPageProps) => {
         );
     }
 
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://blogme.africa';
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://blogme.live';
     const postUrl = `${baseUrl}/blog/${slug}`;
     const description = post.content
         ? post.content.replace(/<[^>]*>/g, '').substring(0, 160)

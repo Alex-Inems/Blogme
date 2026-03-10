@@ -53,7 +53,7 @@ const FAQPage = () => {
                 },
                 {
                     question: "How do I delete my account?",
-                    answer: "To delete your account, please contact our support team at support@blogme.africa. We'll help you through the process and ensure your data is properly removed."
+                    answer: "To delete your account, please contact our support team at support@blogme.live. We'll help you through the process and ensure your data is properly removed."
                 }
             ]
         },

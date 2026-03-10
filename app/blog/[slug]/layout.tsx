@@ -4,7 +4,7 @@ import { collection, query, where, getDocs } from 'firebase/firestore';
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
     const { slug } = params;
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://blogme.africa';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://blogme.live';
 
     try {
         const postsCollection = collection(db, 'posts');

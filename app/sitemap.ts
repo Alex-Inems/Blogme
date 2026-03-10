@@ -3,7 +3,7 @@ import { db } from '@/lib/firebase';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://blogme.africa';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://blogme.live';
 
     // Static pages
     const staticPages: MetadataRoute.Sitemap = [

@@ -151,7 +151,7 @@ const PrivacyPolicyPage = () => {
                             </p>
                             <div className="bg-gray-100 p-4 rounded-lg">
                                 <p className="text-gray-700">
-                                    <strong>Email:</strong> privacy@blogme.africa<br />
+                                    <strong>Email:</strong> privacy@blogme.live<br />
                                     <strong>Address:</strong> 123 Story Street, Digital City, DC 12345<br />
                                     <strong>Phone:</strong> +1 (555) 123-4567
                                 </p>

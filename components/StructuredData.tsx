@@ -31,7 +31,7 @@ interface StructuredDataProps {
 
 export default function StructuredData({ type, data }: StructuredDataProps) {
     const getStructuredData = () => {
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://blogme.africa';
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://blogme.live';
 
         switch (type) {
             case 'Article': {

@@ -3,13 +3,13 @@
 export const SITE_NAME = "Blogme";
 export const SITE_DESCRIPTION = "Showcasing you to the world";
 export const COPYRIGHT_TEXT = `© ${new Date().getFullYear()} Blogme. All rights reserved.`;
-export const BASE_URL = "https://blogme.africa";
+export const BASE_URL = "https://blogme.live";
 
 // Company Information
 export const COMPANY_INFO = {
   name: "Blogme",
   description: "A platform for sharing your stories with the world",
-  email: "hello@blogme.africa",
+  email: "hello@blogme.live",
   phone: "+1 (555) 123-4567",
   address: "123 Story Street, Digital City, DC 12345"
 };

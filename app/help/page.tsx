@@ -21,7 +21,7 @@ const HelpCenterPage = () => {
         },
         {
             question: "How do I delete my account?",
-            answer: "To delete your account, please contact our support team at support@blogme.africa. We'll help you through the process and ensure your data is properly removed."
+            answer: "To delete your account, please contact our support team at support@blogme.live. We'll help you through the process and ensure your data is properly removed."
         },
         {
             question: "Can I make my posts private?",
@@ -106,7 +106,7 @@ const HelpCenterPage = () => {
                             Contact Support
                         </Link>
                         <a
-                            href="mailto:support@blogme.africa"
+                            href="mailto:support@blogme.live"
                             className="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200"
                         >
                             Email Us

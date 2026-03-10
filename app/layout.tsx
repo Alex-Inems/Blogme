@@ -9,7 +9,7 @@ import Footer from "@/components/Footer";
 import StructuredData from '@/components/StructuredData';
 import './globals.css'
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://blogme.africa';
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://blogme.live';
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),

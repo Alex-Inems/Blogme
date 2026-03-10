@@ -27,7 +27,7 @@ export async function GET() {
       };
     });
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://blogme.africa';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://blogme.live';
     const siteName = 'Blogme';
     const siteDescription = 'A platform for sharing your stories with the world';
 
