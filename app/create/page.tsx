@@ -44,7 +44,7 @@ const CreatePost: React.FC = () => {
   const [scheduledAt, setScheduledAt] = useState<string>('');
   const [isAIThinking, setIsAIThinking] = useState(false);
   // const [isGeneratingImage, setIsGeneratingImage] = useState(false);
-  const [_isGeneratingImage, _setIsGeneratingImage] = useState(false); // Used to avoid unused-vars in commented logic below
+  // const [_isGeneratingImage, _setIsGeneratingImage] = useState(false); // Used to avoid unused-vars in commented logic below
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
   const [showAiPanel, setShowAiPanel] = useState(false);
   const [showAiHowTo, setShowAiHowTo] = useState(false);
