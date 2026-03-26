@@ -69,8 +69,9 @@ export async function POST(req: Request) {
         const suggestion = response.choices[0].message.content;
 
         return NextResponse.json({ suggestion });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('OpenAI Error:', error);
-        return NextResponse.json({ error: error.message || 'An error occurred with OpenAI' }, { status: 500 });
+        const errorMessage = error instanceof Error ? error.message : 'An error occurred with OpenAI';
+        return NextResponse.json({ error: errorMessage }, { status: 500 });
     }
 }
