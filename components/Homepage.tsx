@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
-import { collection, query, orderBy, getDocs, limit } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, limit, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { PostListSkeleton } from '@/components/LoadingSkeleton';
 import Image from 'next/image';
@@ -15,6 +15,7 @@ interface Post {
   slug?: string;
   content: string;
   author: string;
+  authorId?: string;
   authorProfileImage?: string;
   createdAt: { toDate: () => Date };
   imageUrl?: string;
@@ -35,6 +36,8 @@ const Homepage = () => {
   const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [profileImageUrl, setProfileImageUrl] = useState<string | null>(null);
+  const [recommendedPosts, setRecommendedPosts] = useState<Post[]>([]);
+  const [isRecLoading, setIsRecLoading] = useState(false);
   const postsPerPage = 6;
   const [selectedCategory] = useState<string>('');
   const [selectedTag] = useState<string>('');
@@ -56,6 +59,9 @@ const Homepage = () => {
           .filter(post => post.published !== false); // Only show published posts
         setPosts(postsData);
         setFilteredPosts(postsData);
+
+        // Fetch recommendations
+        fetchRecommendations(postsData);
       } catch (error) {
         console.error('Error fetching posts:', error);
       } finally {
@@ -63,8 +69,50 @@ const Homepage = () => {
       }
     };
 
+    const fetchRecommendations = async (allPosts: Post[]) => {
+      setIsRecLoading(true);
+      try {
+        let recs: Post[] = [];
+
+        if (isSignedIn && user?.id) {
+          // Find user's interests based on their own posts
+          const userPostsRef = collection(db, 'posts');
+          const userPostsQuery = query(userPostsRef, where('authorId', '==', user.id), limit(10));
+          const userPostsSnap = await getDocs(userPostsQuery);
+          
+          if (!userPostsSnap.empty) {
+            const userCategories = userPostsSnap.docs.map(doc => doc.data().category).filter(Boolean);
+            const mostLikelyCategory = userCategories[0]; // Simple logic: pick the first category they write in
+            
+            recs = allPosts
+              .filter(p => p.authorId !== user.id && p.category === mostLikelyCategory)
+              .slice(0, 4);
+          }
+        }
+
+        // If not enough personalized recs, fill with "Trending" (ranked by likes and views)
+        if (recs.length < 4) {
+          const trendingRecs = [...allPosts]
+            .filter(p => !recs.find(r => r.id === p.id)) // Avoid duplicates
+            .sort((a, b) => {
+              const scoreA = (a.likes || 0) * 2 + (a.views || 0);
+              const scoreB = (b.likes || 0) * 2 + (b.views || 0);
+              return scoreB - scoreA;
+            })
+            .slice(0, 4);
+          recs = [...recs, ...trendingRecs].slice(0, 4);
+        }
+
+        setRecommendedPosts(recs);
+      } catch (error) {
+        console.error('Error fetching recommendations:', error);
+      } finally {
+        setIsRecLoading(false);
+      }
+    };
+
     fetchPosts();
-  }, []);
+  }, [isSignedIn, user?.id]);
 
   useEffect(() => {
     if (user?.imageUrl) {
@@ -261,6 +309,85 @@ const Homepage = () => {
                 </div>
                 <div className="text-gray-600 dark:text-zinc-400">Active Writers</div>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Suggested & Trending Section */}
+      <section className="py-16 bg-white dark:bg-zinc-900 border-t border-gray-100 dark:border-zinc-800">
+        <div className="w-full px-1">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex flex-col md:flex-row items-end justify-between mb-8 gap-4">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-zinc-50 mb-2 flex items-center gap-2">
+                  <span className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg text-orange-600 dark:text-orange-400">
+                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M12.395 2.553a1 1 0 00-1.45 0l-7 7a1 1 0 000 1.414l7 7a1 1 0 001.45-1.414L6.414 11H15a1 1 0 100-2H6.414l5.981-5.98a1 1 0 000-1.467z" clipRule="evenodd" />
+                    </svg>
+                  </span>
+                  {isSignedIn ? 'Personalized for You' : 'Trending Now'}
+                </h2>
+                <p className="text-gray-600 dark:text-zinc-400">
+                  {isSignedIn ? 'Based on your activity and interests' : 'Most loved and commented stories this week'}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <div className="h-10 w-10 rounded-full border border-gray-200 dark:border-zinc-700 flex items-center justify-center text-gray-400 cursor-not-allowed">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                </div>
+                <div className="h-10 w-10 rounded-full border border-gray-200 dark:border-zinc-700 flex items-center justify-center text-gray-400 cursor-not-allowed">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {isRecLoading ? (
+                Array(4).fill(0).map((_, i) => (
+                  <div key={i} className="animate-pulse flex flex-col gap-3">
+                    <div className="h-40 bg-gray-200 dark:bg-zinc-800 rounded-2xl w-full"></div>
+                    <div className="h-4 bg-gray-200 dark:bg-zinc-800 rounded w-3/4"></div>
+                    <div className="h-4 bg-gray-200 dark:bg-zinc-800 rounded w-1/2"></div>
+                  </div>
+                ))
+              ) : recommendedPosts.length > 0 ? (
+                recommendedPosts.map((post) => (
+                  <Link key={post.id} href={`/blog/${post.slug || post.id}`} className="group block">
+                    <div className="relative h-44 rounded-2xl overflow-hidden mb-4 shadow-sm group-hover:shadow-md transition-shadow">
+                      {post.imageUrl ? (
+                        <Image
+                          src={post.imageUrl}
+                          alt={post.title}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center text-white font-bold">
+                          Blogme
+                        </div>
+                      )}
+                      <div className="absolute top-3 left-3">
+                        <span className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md px-2 py-1 rounded-lg text-xs font-bold text-orange-600 dark:text-orange-400 border border-white/20">
+                          {post.category || 'Story'}
+                        </span>
+                      </div>
+                    </div>
+                    <h3 className="font-bold text-gray-900 dark:text-zinc-50 line-clamp-2 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
+                      {post.title}
+                    </h3>
+                    <div className="flex items-center mt-2 text-xs text-gray-500 dark:text-zinc-400 gap-2">
+                       <span className="font-medium text-gray-700 dark:text-zinc-300">{post.author}</span>
+                       <span>•</span>
+                       <span>{post.likes || 0} likes</span>
+                    </div>
+                  </Link>
+                ))
+              ) : (
+                <div className="col-span-full py-12 text-center bg-gray-50 dark:bg-zinc-800/50 rounded-3xl border-2 border-dashed border-gray-200 dark:border-zinc-700">
+                  <p className="text-gray-500 dark:text-zinc-400">Check back later for recommendations!</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

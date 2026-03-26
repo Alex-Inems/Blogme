@@ -18,6 +18,7 @@ interface Post {
   content: string;
   createdAt: Timestamp;
   author: string;
+  authorId?: string;
   imageUrl?: string;
   readingTime?: number;
   slug?: string;

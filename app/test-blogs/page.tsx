@@ -12,6 +12,7 @@ interface Post {
     slug?: string;
     content: string;
     author: string;
+    authorId?: string;
     authorProfileImage: string;
     createdAt: { toDate: () => Date };
     imageUrl: string;

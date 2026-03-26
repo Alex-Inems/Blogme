@@ -6,9 +6,10 @@ import { db } from '@/lib/firebase';
 import { uploadImage, uploadVideo } from '@/lib/cloudinary-upload';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
-import { HiOutlinePhotograph, HiOutlineVideoCamera, HiOutlineSave, HiOutlineCalendar } from 'react-icons/hi';
 import { toast } from 'sonner';
 import RichTextEditor from '@/components/RichTextEditor';
+import { HiOutlinePhotograph, HiOutlineVideoCamera, HiOutlineSave, HiOutlineCalendar, HiSparkles, HiOutlineInformationCircle } from 'react-icons/hi';
+import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import DOMPurify from 'dompurify';
 
@@ -41,6 +42,12 @@ const CreatePost: React.FC = () => {
   const [category, setCategory] = useState<string>('');
   const [tags, setTags] = useState<string>('');
   const [scheduledAt, setScheduledAt] = useState<string>('');
+  const [isAIThinking, setIsAIThinking] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
+  const [showAiPanel, setShowAiPanel] = useState(false);
+  const [showAiHowTo, setShowAiHowTo] = useState(false);
+  const [aiPanelType, setAiPanelType] = useState<'title' | 'content' | 'tags' | null>(null);
   const router = useRouter();
 
   const categories = [
@@ -167,6 +174,96 @@ const CreatePost: React.FC = () => {
     }
   };
 
+  const fetchAiSuggestions = async (type: 'title' | 'content' | 'tags') => {
+    if (isAIThinking) return;
+    setIsAIThinking(true);
+    setAiPanelType(type);
+    setShowAiPanel(true);
+    setAiSuggestions([]);
+
+    try {
+      const response = await fetch('/api/suggestions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentTitle: title,
+          currentContent: content,
+          type: type,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.error) {
+        toast.error('AI Error', { description: data.error });
+        setShowAiPanel(false);
+      } else {
+        if (type === 'title') {
+          // Parse lines for titles
+          const titles = data.suggestion.split('\n').filter((l: string) => l.trim().length > 0).map((l: string) => l.replace(/^\d+[\.\)]\s*/, '').trim());
+          setAiSuggestions(titles);
+        } else if (type === 'tags') {
+          const tagsList = data.suggestion.split(',').map((t: string) => t.trim());
+          setAiSuggestions([tagsList.join(', ')]);
+        } else {
+          setAiSuggestions([data.suggestion]);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching suggestions:', error);
+      toast.error('AI Error', { description: 'Failed to connect to AI service.' });
+      setShowAiPanel(false);
+    } finally {
+      setIsAIThinking(false);
+    }
+  };
+
+  const applySuggestion = (suggestion: string) => {
+    if (aiPanelType === 'title') {
+      setTitle(suggestion);
+    } else if (aiPanelType === 'content') {
+      setContent(content + ' ' + suggestion);
+    } else if (aiPanelType === 'tags') {
+      setTags(suggestion);
+    }
+    setShowAiPanel(false);
+  };
+
+  const handleAiImageGenerate = async () => {
+    if (!title) {
+      toast.error('Missing title', { description: 'Please enter a title first so the AI knows what image to generate.' });
+      return;
+    }
+    setIsGeneratingImage(true);
+    try {
+      const response = await fetch('/api/suggestions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentTitle: title,
+          currentContent: content,
+          type: 'image',
+        }),
+      });
+      const data = await response.json();
+      if (data.error) {
+        toast.error('AI Error', { description: data.error });
+      } else {
+        const imageUrl = data.suggestion;
+        // Fetch the image as a blob and convert to File
+        const imgRes = await fetch(imageUrl);
+        const blob = await imgRes.blob();
+        const file = new File([blob], 'ai-generated-image.png', { type: 'image/png' });
+        setImageFile(file);
+        toast.success('AI Image Generated!', { description: 'The image has been generated and set as your post cover.' });
+      }
+    } catch (error) {
+      console.error('Error generating AI image:', error);
+      toast.error('AI Error', { description: 'Failed to generate AI image.' });
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
   const handleSaveDraft = async (): Promise<void> => {
     await handleSubmit(false);
   };
@@ -234,7 +331,28 @@ const CreatePost: React.FC = () => {
   return (
     <div className="dark:bg-zinc-950 dark:text-zinc-50 flex flex-col min-h-screen p-4 bg-gray-50">
       <div className="w-full max-w-4xl mx-auto p-6 mt-8">
-        <h1 className="text-4xl font-bold mb-6 text-gray-900 dark:text-zinc-50">Create a New Post</h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-zinc-50">Create a New Post</h1>
+          <button
+            onClick={() => setShowAiHowTo(true)}
+            className="flex items-center gap-2 text-sm font-medium text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 transition-colors"
+          >
+            <HiOutlineInformationCircle size={20} />
+            How to use AI?
+          </button>
+        </div>
+
+        <div className="bg-orange-50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-900/30 rounded-2xl p-4 mb-8 flex items-start gap-4 animate-in slide-in-from-top-4 duration-500">
+          <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-xl text-orange-600 dark:text-orange-400">
+            <HiSparkles size={24} />
+          </div>
+          <div>
+            <h4 className="font-bold text-orange-900 dark:text-orange-100 mb-1">AI Writing Assistant is Active!</h4>
+            <p className="text-sm text-orange-800/80 dark:text-orange-200/80 leading-relaxed">
+              Stuck on a title or need ideas to keep writing? Look for the <span className="inline-flex items-center bg-orange-200 dark:bg-orange-800 px-1 rounded mx-1"><HiSparkles size={12} className="mr-1" /> ✨</span> icons throughout the form for instant AI-powered suggestions based on your post.
+            </p>
+          </div>
+        </div>
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -243,15 +361,26 @@ const CreatePost: React.FC = () => {
           className="space-y-6"
         >
           <div>
-            <input
-              placeholder="Enter post title..."
-              type="text"
-              id="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-              className="w-full py-3 px-4 text-2xl font-semibold text-gray-900 dark:text-zinc-50 bg-white dark:bg-zinc-900 border-2 border-gray-200 dark:border-zinc-700 rounded-xl focus:outline-none focus:border-orange-500 dark:focus:border-orange-500 transition-colors"
-            />
+            <div className="flex items-center gap-2">
+              <input
+                placeholder="Enter post title..."
+                type="text"
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required
+                className="flex-1 py-3 px-4 text-2xl font-semibold text-gray-900 dark:text-zinc-50 bg-white dark:bg-zinc-900 border-2 border-gray-200 dark:border-zinc-700 rounded-xl focus:outline-none focus:border-orange-500 dark:focus:border-orange-500 transition-colors"
+              />
+              <button
+                type="button"
+                onClick={() => fetchAiSuggestions('title')}
+                disabled={isAIThinking || content.length < 20}
+                title="Get Title Suggestions"
+                className="p-3 rounded-xl bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-colors disabled:opacity-50"
+              >
+                <HiSparkles size={24} />
+              </button>
+            </div>
           </div>
 
           <div className="flex items-center gap-3 mb-4">
@@ -284,12 +413,49 @@ const CreatePost: React.FC = () => {
               onChange={handleVideoChange}
               className="hidden"
             />
+
+            {/* Temporarily hidden AI Image Generation
+            <button
+              type="button"
+              onClick={handleAiImageGenerate}
+              disabled={isGeneratingImage || !title || title.length < 5}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full border-2 transition-all duration-200 ${isGeneratingImage
+                ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
+                : 'border-orange-200 text-orange-600 hover:bg-orange-50 hover:border-orange-500'
+                }`}
+              title="Generate Cover Image with AI"
+            >
+              {isGeneratingImage ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <HiSparkles className="w-5 h-5" />
+                  <span className="text-sm font-semibold text-wrap">Generate AI Cover</span>
+                </>
+              )}
+            </button>
+            */}
           </div>
 
           <div>
-            <label htmlFor="content" className="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-2">
-              Content
-            </label>
+            <div className="flex justify-between items-center mb-2">
+              <label htmlFor="content" className="text-sm font-semibold text-gray-700 dark:text-zinc-300">
+                Content
+              </label>
+              <button
+                type="button"
+                onClick={() => fetchAiSuggestions('content')}
+                disabled={isAIThinking || title.length < 5}
+                title="AI Writing Assistant"
+                className="flex items-center gap-2 text-sm font-medium text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 transition-colors"
+              >
+                <HiSparkles size={16} />
+                AI Assist
+              </button>
+            </div>
             <RichTextEditor
               value={content}
               onChange={setContent}
@@ -318,9 +484,19 @@ const CreatePost: React.FC = () => {
             </div>
 
             <div>
-              <label htmlFor="tags" className="block text-sm font-semibold text-gray-700 dark:text-zinc-300 mb-2">
-                Tags (comma-separated)
-              </label>
+              <div className="flex justify-between items-center mb-2">
+                <label htmlFor="tags" className="text-sm font-semibold text-gray-700 dark:text-zinc-300">
+                  Tags (comma-separated)
+                </label>
+                <button
+                  type="button"
+                  onClick={() => fetchAiSuggestions('tags')}
+                  disabled={isAIThinking || content.length < 50}
+                  className="flex items-center gap-1 text-xs text-orange-500 hover:text-orange-600"
+                >
+                  <HiSparkles size={12} /> Suggest
+                </button>
+              </div>
               <input
                 type="text"
                 id="tags"
@@ -435,6 +611,161 @@ const CreatePost: React.FC = () => {
           </div>
         </form>
       </div>
+
+      {/* AI How-to Modal */}
+      {showAiHowTo && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-100 dark:border-zinc-800 animate-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-gray-100 dark:border-zinc-800 flex items-center justify-between bg-orange-50/50 dark:bg-orange-900/10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400">
+                  <HiSparkles size={24} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-zinc-50">Magic Writing Assistant</h3>
+                  <p className="text-sm text-gray-500 dark:text-zinc-400">Learn how to boost your creativity</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAiHowTo(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200 transition-colors p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-full"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-8 space-y-8 max-h-[70vh] overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-3 p-4 rounded-2xl bg-gray-50 dark:bg-zinc-800/50 border border-gray-100 dark:border-zinc-800">
+                  <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400 font-bold">
+                    <HiSparkles size={18} />
+                    Title Helper
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-zinc-400 leading-relaxed">
+                    Write a few sentences of your story first, then click the sparkle icon next to the Title field. AI will suggest 5 catchy, SEO-friendly titles.
+                  </p>
+                </div>
+
+                <div className="space-y-3 p-4 rounded-2xl bg-gray-50 dark:bg-zinc-800/50 border border-gray-100 dark:border-zinc-800">
+                  <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400 font-bold">
+                    <HiSparkles size={18} />
+                    Writing Partner
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-zinc-400 leading-relaxed">
+                    If you get writer's block, click "AI Assist" above the editor. The AI will look at your title and current text to suggest the next perfect paragraph.
+                  </p>
+                </div>
+
+                <div className="space-y-3 p-4 rounded-2xl bg-gray-50 dark:bg-zinc-800/50 border border-gray-100 dark:border-zinc-800">
+                  <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400 font-bold">
+                    <HiSparkles size={18} />
+                    Auto-Tags
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-zinc-400 leading-relaxed">
+                    Don't worry about categorization. Click "Suggest" next to the tags field, and let the AI find the most relevant keywords for your post.
+                  </p>
+                </div>
+
+                {/* Temporarily hidden Visual Storyteller help
+                <div className="space-y-3 p-4 rounded-2xl bg-gray-50 dark:bg-zinc-800/50 border border-gray-100 dark:border-zinc-800">
+                  <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400 font-bold">
+                    <HiSparkles size={18} />
+                    Visual Storyteller
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-zinc-400 leading-relaxed">
+                    Need a cover image? Click "Generate AI Cover" next to the upload icons. DALL-E 3 will create a custom, professional illustration based on your title.
+                  </p>
+                </div>
+                */}
+
+                <div className="space-y-3 p-4 rounded-2xl bg-orange-50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-900/20">
+                  <div className="flex items-center gap-2 text-orange-700 dark:text-orange-300 font-bold">
+                    💡 Pro Tip
+                  </div>
+                  <p className="text-sm text-orange-800/80 dark:text-orange-200/80 leading-relaxed">
+                    AI works best when it has context! Try to write at least 20-50 words before asking for suggestions to get the most accurate results.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 bg-gray-50 dark:bg-zinc-900/50 border-t border-gray-100 dark:border-zinc-800 flex justify-end">
+              <button
+                onClick={() => setShowAiHowTo(false)}
+                className="px-8 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold transition-all shadow-lg hover:shadow-orange-500/20"
+              >
+                Got it, thanks!
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI Suggestion Modal */}
+      {showAiPanel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-zinc-900 rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border border-gray-100 dark:border-zinc-800 animate-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-gray-100 dark:border-zinc-800 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400">
+                  <HiSparkles size={24} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-zinc-50">AI Post {aiPanelType === 'title' ? 'Titles' : aiPanelType === 'content' ? 'Assistant' : 'Tags'}</h3>
+                  <p className="text-sm text-gray-500 dark:text-zinc-400">Powered by OpenAI</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAiPanel(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200 transition-colors p-2 hover:bg-gray-100 dark:hover:bg-zinc-800 rounded-full"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-6 max-h-[60vh] overflow-y-auto">
+              {isAIThinking ? (
+                <div className="flex flex-col items-center justify-center py-12 gap-4">
+                  <Loader2 className="w-12 h-12 text-orange-500 animate-spin" />
+                  <p className="text-gray-600 dark:text-zinc-400 font-medium">Brewing some ideas...</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {aiSuggestions.length > 0 ? (
+                    aiSuggestions.map((suggestion, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => applySuggestion(suggestion)}
+                        className="w-full text-left p-4 rounded-2xl border-2 border-gray-100 dark:border-zinc-800 hover:border-orange-500 dark:hover:border-orange-500 hover:bg-orange-50/50 dark:hover:bg-orange-900/10 transition-all duration-200 group relative"
+                      >
+                        <span className="text-gray-800 dark:text-zinc-200 group-hover:text-orange-700 dark:group-hover:text-orange-300 block mb-1">
+                          {suggestion}
+                        </span>
+                        <span className="text-xs text-orange-500 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 font-medium">
+                          Apply this <HiSparkles size={12} />
+                        </span>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-gray-500 dark:text-zinc-400">No suggestions found. Try adding more content first.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 bg-gray-50 dark:bg-zinc-900/50 border-t border-gray-100 dark:border-zinc-800 flex justify-end">
+              <button
+                onClick={() => setShowAiPanel(false)}
+                className="px-6 py-2 rounded-xl text-sm font-semibold text-gray-600 dark:text-zinc-400 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

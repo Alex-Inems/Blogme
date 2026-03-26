@@ -4,6 +4,7 @@ interface Post {
     title?: string;
     content?: string;
     author?: string;
+    authorId?: string;
     category?: string;
     tags?: string[];
     createdAt?: { toDate: () => Date } | string | number;
